@@ -1,0 +1,9 @@
+{
+  "projection": {
+    "fields": ["name", "email", "phone", "location", "skills"],
+    "phone_normalization": "E164",
+    "skills_normalization": "lowercase",
+    "include_provenance": true,
+    "on_missing": "null"
+  }
+}

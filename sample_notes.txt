@@ -1,0 +1,10 @@
+Candidate Name: Amit Sharma
+Email contact: amit.sharma@example.com
+Notes: Met him at the Bangalore meetup. He mentions he is currently based in Bangalore, India.
+His core skills include Python, Go, Kubernetes, and System Design.
+
+Candidate Name: Jane Doe
+Email contact: jane.doe@example.com
+Notes: Relocating to San Francisco, CA. Currently looking for PM roles.
+Skills include Product Strategy, Agile, and Roadmap.
+Phone number mentioned is 555-0199.
