@@ -631,48 +631,6 @@ class SourceReader:
 
 class ConflictResolver:
     @staticmethod
-    def find_matching_candidate(raw_cand: Dict[str, Any], consolidated: List[Dict[str, Any]]) -> List[int]:
-        matches = []
-        cand_id = raw_cand.get("candidate_id")
-        emails = [e.lower().strip() for e in raw_cand.get("emails", []) if e]
-        phones = [normalize_phone(p) for p in raw_cand.get("phones", []) if p]
-        name = raw_cand.get("full_name")
-        cleaned_name = clean_full_name(name) if name else None
-        
-        # Clean and extract links from raw candidate
-        links = [l.get("url", "").lower().strip() for l in raw_cand.get("links", []) if l and l.get("url")]
-        
-        for idx, c in enumerate(consolidated):
-            # 1. Match by candidate_id
-            c_id = c.get("candidate_id")
-            if cand_id and c_id and cand_id == c_id:
-                matches.append(idx)
-                continue
-                
-            # 2. Match by any email
-            c_emails = [e.lower().strip() for e in c.get("emails", []) if e]
-            if any(e in c_emails for e in emails):
-                matches.append(idx)
-                continue
-                
-            # 3. Match by exact name + any phone number
-            c_name = c.get("full_name")
-            c_cleaned_name = clean_full_name(c_name) if c_name else None
-            c_phones = [normalize_phone(p) for p in c.get("phones", []) if p]
-            if cleaned_name and c_cleaned_name and cleaned_name == c_cleaned_name:
-                if any(p in c_phones for p in phones):
-                    matches.append(idx)
-                    continue
-                    
-            # 4. Match by any common profile link URL
-            c_links = [l.get("url", "").lower().strip() for l in c.get("links", []) if l and l.get("url")]
-            if any(l in c_links for l in links):
-                matches.append(idx)
-                continue
-                
-        return matches
-
-    @staticmethod
     def create_consolidated_from_raw(raw: Dict[str, Any]) -> Dict[str, Any]:
         source = raw.get("provenance_source", "Unknown")
         conf = raw.get("confidence_score", 0.5)
@@ -769,26 +727,70 @@ class ConflictResolver:
 
     @staticmethod
     def deduplicate(raw_records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        consolidated: List[Dict[str, Any]] = []
+        parent = {}
         
-        for record in raw_records:
-            matching_indices = ConflictResolver.find_matching_candidate(record, consolidated)
+        def find(i):
+            if parent.setdefault(i, i) != i:
+                parent[i] = find(parent[i])
+            return parent[i]
             
-            if not matching_indices:
-                new_c = ConflictResolver.create_consolidated_from_raw(record)
-                consolidated.append(new_c)
-            else:
-                first_idx = matching_indices[0]
-                target = consolidated[first_idx]
+        def union(i, j):
+            root_i = find(i)
+            root_j = find(j)
+            if root_i != root_j:
+                parent[root_i] = root_j
+
+        key_to_index = {}
+        
+        for idx, record in enumerate(raw_records):
+            keys = []
+            
+            cand_id = record.get("candidate_id")
+            if cand_id:
+                keys.append(f"id:{cand_id}")
                 
-                # Fetch and delete other matching candidates to handle transitive merge
-                to_merge = [consolidated[i] for i in matching_indices[1:]]
-                for idx in sorted(matching_indices[1:], reverse=True):
-                    consolidated.pop(idx)
+            emails = [e.lower().strip() for e in record.get("emails", []) if e]
+            for e in emails:
+                keys.append(f"email:{e}")
+                
+            phones = [normalize_phone(p) for p in record.get("phones", []) if p]
+            name = record.get("full_name")
+            cleaned_name = clean_full_name(name) if name else None
+            
+            if cleaned_name and phones:
+                for p in phones:
+                    keys.append(f"namephone:{cleaned_name}:{p}")
                     
+            links = [l.get("url", "").lower().strip() for l in record.get("links", []) if l and l.get("url")]
+            for l in links:
+                keys.append(f"link:{l}")
+                
+            # Connect this record to any existing records that share keys
+            first_match_idx = None
+            for key in keys:
+                if key in key_to_index:
+                    if first_match_idx is None:
+                        first_match_idx = key_to_index[key]
+                        union(idx, first_match_idx)
+                    else:
+                        union(key_to_index[key], first_match_idx)
+                else:
+                    key_to_index[key] = idx
+                    
+        groups = {}
+        for idx in range(len(raw_records)):
+            root = find(idx)
+            groups.setdefault(root, []).append(raw_records[idx])
+            
+        consolidated: List[Dict[str, Any]] = []
+        for root, records in groups.items():
+            if not records:
+                continue
+            
+            target = ConflictResolver.create_consolidated_from_raw(records[0])
+            for record in records[1:]:
                 ConflictResolver.merge_profiles(target, record)
-                for profile in to_merge:
-                    ConflictResolver.merge_profiles(target, profile)
+            consolidated.append(target)
                     
         # Post process to guarantee ID and compute confidence
         for c in consolidated:
