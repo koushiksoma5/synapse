@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Profile Transformer Dashboard</title>
+  <!-- Modern clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: rgba(30, 41, 59, 0.7);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dark: #64748b;
+      --card-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+      --font-outfit: 'Outfit', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-outfit);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+    }
+
+    header {
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      background-color: rgba(15, 23, 42, 0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      font-size: 28px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status-badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 100px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-orange);
+      box-shadow: 0 0 10px var(--accent-orange);
+    }
+
+    .status-dot.active {
+      background-color: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .status-dot.error {
+      background-color: var(--accent-red);
+      box-shadow: 0 0 10px var(--accent-red);
+    }
+
+    .main-container {
+      flex: 1;
+      display: flex;
+      padding: 30px;
+      gap: 30px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .left-panel {
+      width: 420px;
+      flex-shrink: 0;
+    }
+
+    .right-panel {
+      flex: 1;
+      min-width: 0; /* Prevents flex children from breaking parent layout */
+    }
+
+    .panel-header {
+      padding: 20px 25px;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(15, 23, 42, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body {
+      padding: 25px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Tabs Component */
+    .tabs-header {
+      display: flex;
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid var(--panel-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .file-dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-dropzone:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .file-dropzone.has-files {
+      border-color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .file-dropzone-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      transition: color 0.3s ease;
+    }
+
+    .file-dropzone:hover .file-dropzone-icon {
+      color: var(--primary);
+    }
+
+    .file-dropzone-text {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .file-dropzone-subtext {
+      font-size: 11px;
+      color: var(--text-dark);
+      margin-top: 4px;
+    }
+
+    .selected-files-list {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--accent-green);
+      text-align: left;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    .selected-file-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 4px;
+      margin-bottom: 4px;
+      border-left: 2px solid var(--accent-green);
+    }
+
+    textarea {
+      width: 100%;
+      height: 110px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 13px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      transition: border-color 0.2s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* Checkboxes & Config Settings */
+    .settings-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .checkbox-container input {
+      accent-color: var(--primary);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .config-dropdown-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .dropdown-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    select {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    select:focus {
+      border-color: var(--primary);
+    }
+
+    .action-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Right Output Layout */
+    .search-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 25px;
+      background: rgba(15, 23, 42, 0.2);
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 8px 12px 8px 36px;
+      font-size: 13px;
+      color: #fff;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dark);
+      font-size: 14px;
+    }
+
+    .view-toggles {
+      display: flex;
+      background: rgba(15, 23, 42, 0.3);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--panel-border);
+    }
+
+    .view-toggle-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .view-toggle-btn.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .export-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .export-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2;
+    }
+
+    .export-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--text-muted);
+    }
+
+    .export-btn-primary {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #a7f3d0;
+    }
+
+    .export-btn-primary:hover {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: var(--accent-green);
+    }
+
+    /* Outputs Components */
+    .output-content-container {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Empty state */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dark);
+      text-align: center;
+      padding: 40px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      max-width: 300px;
+      line-height: 1.5;
+    }
+
+    /* Grid / Table View */
+    .data-table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--panel-border);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .cell-value {
+      line-height: 1.4;
+    }
+
+    .cell-provenance {
+      display: block;
+      font-size: 10px;
+      color: var(--text-dark);
+      margin-top: 3px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-csv {
+      background: rgba(99, 102, 241, 0.15);
+      color: #c7d2fe;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-notes {
+      background: rgba(16, 185, 129, 0.15);
+      color: #a7f3d0;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-none {
+      background: rgba(100, 116, 139, 0.15);
+      color: var(--text-muted);
+      border: 1px solid rgba(100, 116, 139, 0.3);
+    }
+
+    /* Cards View */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .candidate-card {
+      background: rgba(15, 23, 42, 0.3);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+    }
+
+    .card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .card-email {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    .card-confidence {
+      text-align: right;
+    }
+
+    .confidence-percentage {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .confidence-label {
+      font-size: 9px;
+      color: var(--text-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dark);
+    }
+
+    .detail-value-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .provenance-tag {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      border: 1px solid var(--panel-border);
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .skills-badges-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .skill-badge {
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: #e2e8f0;
+    }
+
+    /* Raw JSON View */
+    .raw-json-container {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 20px;
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #38bdf8;
+      overflow: auto;
+      white-space: pre;
+      line-height: 1.5;
+    }
+
+    /* Animations */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid var(--primary);
+      border-left: 4px solid var(--primary);
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(150%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      border-color: var(--accent-green);
+      border-left-color: var(--accent-green);
+    }
+
+    .toast.error {
+      border-color: var(--accent-red);
+      border-left-color: var(--accent-red);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <span class="logo-icon">🚀</span>
+      <div>
+        <h1>Candidate Profile Transformer</h1>
+        <p style="font-size: 11px; color: var(--text-dark);">Deduplication & Provenance Aggregator</p>
+      </div>
+    </div>
+    
+    <div class="status-badge">
+      <div id="status-dot" class="status-dot"></div>
+      <span id="status-text">Ready</span>
+    </div>
+  </header>
+
+  <main class="main-container">
+    
+    <!-- LEFT: Ingestion Configurations panel -->
+    <section class="panel left-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">📥 Data Ingestion Layer</h2>
+      </div>
+      
+      <div class="panel-body">
+        <!-- Input Mode Tabs -->
+        <div class="tabs-header">
+          <button type="button" class="tab-btn active" onclick="switchInputMode('files')">Select Files</button>
+          <button type="button" class="tab-btn" onclick="switchInputMode('paste')">Paste Raw Text</button>
+        </div>
+
+        <!-- TAB 1: File Selectors -->
+        <div id="input-mode-files" class="tab-content active">
+          <div class="form-group">
+            <span class="form-label">Structured Data (CSV Files)</span>
+            <div class="file-dropzone" onclick="document.getElementById('csv-file-input').click()">
+              <div class="file-dropzone-icon">📊</div>
+              <p class="file-dropzone-text">Click to choose CSV files</p>
+              <p class="file-dropzone-subtext">Accepts multiple CSVs</p>
+              <input type="file" id="csv-file-input" multiple accept=".csv" style="display:none" onchange="handleFileSelection('csv')">
+            </div>
+            <div id="csv-files-list" class="selected-files-list"></div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 25px;">
+            <span class="form-label">Unstructured Data (TXT Notes)</span>
+            <div class="file-dropzone" onclick="document.getElementById('txt-file-input').click()">
+              <div class="file-dropzone-icon">📝</div>
+              <p class="file-dropzone-text">Click to choose TXT files</p>
+              <p class="file-dropzone-subtext">Accepts multiple text documents</p>
+              <input type="file" id="txt-file-input" multiple accept=".txt,.log" style="display:none" onchange="handleFileSelection('txt')">
+            </div>
+            <div id="txt-files-list" class="selected-files-list"></div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Copy-Paste Text Area -->
+        <div id="input-mode-paste" class="tab-content">
+          <div class="form-group">
+            <span class="form-label">Paste CSV Content</span>
+            <textarea id="csv-text-area" placeholder="name,email,phone&#10;John Doe,john@example.com,+1234567890"></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 25px;">
+            <span class="form-label">Paste Candidate Notes Text</span>
+            <textarea id="notes-text-area" placeholder="Candidate Name: John Doe&#10;Email contact: john@example.com&#10;Skills: Python, Javascript, React&#10;Phone number: +1234567890"></textarea>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--panel-border); margin: 20px 0;">
+
+        <!-- Projection Config Controls -->
+        <div class="settings-section-title">⚙️ Output Projection Rules</div>
+        
+        <span class="form-label">Fields to Project</span>
+        <div class="checkbox-grid">
+          <label class="checkbox-container">
+            <input type="checkbox" id="field-name" checked> Name
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="field-email" checked disabled> Email (Key)
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="field-phone" checked> Phone
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="field-location" checked> Location
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="field-skills" checked> Skills
+          </label>
+        </div>
+
+        <div class="config-dropdown-grid">
+          <div class="dropdown-container">
+            <label class="form-label">Phone Normalization</label>
+            <select id="phone-normalization">
+              <option value="E164" selected>E.164 Strict Format</option>
+              <option value="none">None (Raw Extracted)</option>
+            </select>
+          </div>
+
+          <div class="dropdown-container" style="margin-top: 10px;">
+            <label class="form-label">Skills Case Mapping</label>
+            <select id="skills-normalization">
+              <option value="lowercase" selected>lowercase</option>
+              <option value="uppercase">UPPERCASE</option>
+              <option value="titlecase">Title Case</option>
+              <option value="none">None (Raw Extracted)</option>
+            </select>
+          </div>
+
+          <div class="dropdown-container" style="margin-top: 10px;">
+            <label class="form-label">Missing Field Fallback Policy</label>
+            <select id="on-missing">
+              <option value="null" selected>Assign Null</option>
+              <option value="omit">Omit Field</option>
+              <option value="error">Raise Pipeline Error</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="checkbox-container" style="margin: 20px 0 25px 0;">
+          <input type="checkbox" id="include-provenance" checked> Include Trace logs & Provenance metadata
+        </label>
+
+        <button class="action-btn" onclick="executeTransformation()">
+          <span>⚡ Run Consolidation Engine</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RIGHT: Dynamic Outputs Panel -->
+    <section class="panel right-panel">
+      <!-- Search & Tab headers -->
+      <div class="search-bar-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="search-box" placeholder="Search by name, email, skills, location..." oninput="handleSearch()">
+        </div>
+        
+        <div class="view-toggles">
+          <button class="view-toggle-btn active" id="btn-view-grid" onclick="switchOutputView('grid')">Spreadsheet Grid</button>
+          <button class="view-toggle-btn" id="btn-view-cards" onclick="switchOutputView('cards')">Profile Cards</button>
+          <button class="view-toggle-btn" id="btn-view-json" onclick="switchOutputView('json')">JSON Code</button>
+        </div>
+
+        <div class="export-btns">
+          <button class="export-btn export-btn-primary" onclick="exportData('csv')">💾 Export CSV</button>
+          <button class="export-btn" onclick="exportData('json')">📥 Export JSON</button>
+        </div>
+      </div>
+
+      <!-- Result Space -->
+      <div class="output-content-container">
+        <!-- State: Empty/Prompt -->
+        <div id="output-empty" class="empty-state">
+          <div class="empty-icon">📊</div>
+          <h3 class="empty-title">Awaiting Input Stream</h3>
+          <p class="empty-desc">Upload source files or paste text data in the left panel, and click "Run Consolidation Engine" to start processing.</p>
+        </div>
+
+        <!-- State: Grid View -->
+        <div id="output-grid" class="data-table-container" style="display: none;">
+          <table>
+            <thead>
+              <tr id="table-headers">
+                <!-- Headers dynamically populated -->
+              </tr>
+            </thead>
+            <tbody id="table-rows">
+              <!-- Rows dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- State: Cards View -->
+        <div id="output-cards" class="cards-grid" style="display: none;">
+          <!-- Cards dynamically populated -->
+        </div>
+
+        <!-- State: Raw JSON View -->
+        <div id="output-json" class="raw-json-container" style="display: none;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast">
+    <span id="toast-icon">ℹ️</span>
+    <span id="toast-message">Notification message here</span>
+  </div>
+
+  <script>
+    // State Tracking
+    let inputMode = 'files';
+    let outputView = 'grid';
+    let rawCsvFiles = [];
+    let rawTxtFiles = [];
+    let consolidatedData = []; // Full raw payload from server
+    let filteredData = []; // Searched dataset
+
+    // Ingest files content in-memory
+    function handleFileSelection(type) {
+      const fileInput = document.getElementById(`${type}-file-input`);
+      const fileListDiv = document.getElementById(`${type}-files-list`);
+      const dropzone = fileInput.closest('.file-dropzone');
+      
+      const files = Array.from(fileInput.files);
+      if (files.length === 0) return;
+
+      const filePromises = files.map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            resolve({
+              name: file.name,
+              content: e.target.result
+            });
+          };
+          reader.readAsText(file);
+        });
+      });
+
+      Promise.all(filePromises).then(processedFiles => {
+        if (type === 'csv') {
+          rawCsvFiles = processedFiles;
+        } else {
+          rawTxtFiles = processedFiles;
+        }
+
+        // Update list display
+        fileListDiv.innerHTML = '';
+        processedFiles.forEach(f => {
+          const item = document.createElement('div');
+          item.className = 'selected-file-item';
+          item.innerHTML = `
+            <span>📄 ${f.name}</span>
+            <span>${(f.content.length / 1024).toFixed(1)} KB</span>
+          `;
+          fileListDiv.appendChild(item);
+        });
+
+        // Toggle dropzone style
+        dropzone.classList.add('has-files');
+        showToast('success', `Loaded ${processedFiles.length} ${type.toUpperCase()} file(s) successfully!`);
+      });
+    }
+
+    function switchInputMode(mode) {
+      inputMode = mode;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(cont => cont.classList.remove('active'));
+      
+      // Update btn state
+      event.target.classList.add('active');
+      document.getElementById(`input-mode-${mode}`).classList.add('active');
+    }
+
+    function switchOutputView(view) {
+      outputView = view;
+      document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`btn-view-${view}`).classList.add('active');
+
+      // Hide all output panels
+      document.getElementById('output-empty').style.display = 'none';
+      document.getElementById('output-grid').style.display = 'none';
+      document.getElementById('output-cards').style.display = 'none';
+      document.getElementById('output-json').style.display = 'none';
+
+      if (consolidatedData.length === 0) {
+        document.getElementById('output-empty').style.display = 'flex';
+        return;
+      }
+
+      // Display the selected panel
+      if (view === 'grid') {
+        document.getElementById('output-grid').style.display = 'block';
+        renderGrid();
+      } else if (view === 'cards') {
+        document.getElementById('output-cards').style.display = 'grid';
+        renderCards();
+      } else if (view === 'json') {
+        document.getElementById('output-json').style.display = 'block';
+        renderRawJSON();
+      }
+    }
+
+    // Call Local Server API
+    async function executeTransformation() {
+      // Validate inputs: At least one structured or unstructured data is required!
+      let hasStructured = false;
+      let hasUnstructured = false;
+
+      let payload = {
+        csv_files: [],
+        txt_files: [],
+        csv_text: '',
+        notes_text: '',
+        config: {
+          fields: [],
+          phone_normalization: document.getElementById('phone-normalization').value,
+          skills_normalization: document.getElementById('skills-normalization').value,
+          on_missing: document.getElementById('on-missing').value,
+          include_provenance: document.getElementById('include-provenance').checked
+        }
+      };
+
+      // Populate configurations
+      const configFields = ['name', 'phone', 'location', 'skills'];
+      payload.config.fields.push('email'); // Email is mandatory primary identifier
+      configFields.forEach(f => {
+        if (document.getElementById(`field-${f}`).checked) {
+          payload.config.fields.push(f);
+        }
+      });
+
+      if (inputMode === 'files') {
+        payload.csv_files = rawCsvFiles;
+        payload.txt_files = rawTxtFiles;
+        hasStructured = rawCsvFiles.length > 0;
+        hasUnstructured = rawTxtFiles.length > 0;
+      } else {
+        payload.csv_text = document.getElementById('csv-text-area').value.trim();
+        payload.notes_text = document.getElementById('notes-text-area').value.trim();
+        hasStructured = payload.csv_text.length > 0;
+        hasUnstructured = payload.notes_text.length > 0;
+      }
+
+      // Mandatory validation check: at least 1 input source in total is required!
+      if (!hasStructured && !hasUnstructured) {
+        showToast('error', 'Validation Error: Please select or enter at least ONE structured (CSV) or unstructured (Notes) data source.');
+        updateStatus('Validation Error: Missing Input Sources', 'error');
+        return;
+      }
+
+      updateStatus('Running engine...', 'pending');
+      showToast('info', 'Executing data consolidation pipeline...');
+
+      try {
+        const response = await fetch('/api/transform', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Server consolidation error');
+        }
+
+        consolidatedData = result.data;
+        filteredData = [...consolidatedData];
+        
+        updateStatus(`Completed - Consolidated ${consolidatedData.length} profile(s)`, 'active');
+        showToast('success', `Pipeline succeeded: consolidated ${consolidatedData.length} profile(s).`);
+
+        // Automatically view results
+        switchOutputView(outputView);
+
+      } catch (err) {
+        console.error(err);
+        updateStatus('Pipeline Ingest Error', 'error');
+        showToast('error', err.message);
+        
+        consolidatedData = [];
+        filteredData = [];
+        switchOutputView(outputView);
+      }
+    }
+
+    // Dynamic Renderings
+    function handleSearch() {
+      const query = document.getElementById('search-box').value.toLowerCase().trim();
+      if (!query) {
+        filteredData = [...consolidatedData];
+      } else {
+        filteredData = consolidatedData.filter(cand => {
+          // Helper to check nested field content
+          const checkField = (fieldVal) => {
+            if (!fieldVal) return false;
+            let val = (typeof fieldVal === 'object' && fieldVal !== null && 'value' in fieldVal) ? fieldVal.value : fieldVal;
+            if (!val) return false;
+            if (Array.isArray(val)) {
+              return val.some(item => String(item).toLowerCase().includes(query));
+            }
+            return String(val).toLowerCase().includes(query);
+          };
+
+          // Search in all standard properties
+          return checkField(cand.name) || 
+                 checkField(cand.email) || 
+                 checkField(cand.phone) || 
+                 checkField(cand.location) || 
+                 checkField(cand.skills);
+        });
+      }
+
+      // Re-render active view
+      if (outputView === 'grid') renderGrid();
+      else if (outputView === 'cards') renderCards();
+      else if (outputView === 'json') renderRawJSON();
+    }
+
+    function renderGrid() {
+      const headersTr = document.getElementById('table-headers');
+      const rowsTbody = document.getElementById('table-rows');
+      
+      headersTr.innerHTML = '';
+      rowsTbody.innerHTML = '';
+
+      if (filteredData.length === 0) {
+        rowsTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dark); padding: 30px;">No matching records found.</td></tr>`;
+        return;
+      }
+
+      // Get fields list from first row schema or checkboxes
+      const configFields = ['name', 'email', 'phone', 'location', 'skills'];
+      const includeProvenance = document.getElementById('include-provenance').checked;
+
+      // Make headers
+      configFields.forEach(f => {
+        // Only render headers for fields present in output
+        const hasField = filteredData.some(row => row[f] !== undefined);
+        if (hasField) {
+          const th = document.createElement('th');
+          th.textContent = f;
+          headersTr.appendChild(th);
+        }
+      });
+      
+      if (includeProvenance) {
+        const thScore = document.createElement('th');
+        thScore.textContent = 'Confidence';
+        headersTr.appendChild(thScore);
+      }
+
+      // Render Rows
+      filteredData.forEach(cand => {
+        const tr = document.createElement('tr');
+        
+        configFields.forEach(f => {
+          if (!filteredData.some(row => row[f] !== undefined)) return; // Skip columns not included
+          
+          const td = document.createElement('td');
+          const cellData = cand[f];
+          
+          if (cellData === undefined || cellData === null) {
+            td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
+          } else if (typeof cellData === 'object' && 'value' in cellData) {
+            // Provenance mode is active
+            let val = cellData.value;
+            let source = cellData.source || 'none';
+            let conf = cellData.confidence !== undefined ? cellData.confidence : null;
+            
+            if (val === null) {
+              td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
+            } else {
+              let displayVal = Array.isArray(val) ? val.join(', ') : val;
+              let badgeClass = source.toLowerCase().includes('csv') ? 'badge-csv' : (source.toLowerCase().includes('none') ? 'badge-none' : 'badge-notes');
+              td.innerHTML = `
+                <div class="cell-value">${displayVal}</div>
+                <div class="cell-provenance">
+                  <span class="badge ${badgeClass}">${source}</span>
+                  <span>(${Math.round(conf * 100)}%)</span>
+                </div>
+              `;
+            }
+          } else {
+            // Simple value mode
+            let displayVal = Array.isArray(cellData) ? cellData.join(', ') : cellData;
+            td.innerHTML = `<div class="cell-value">${displayVal}</div>`;
+          }
+          
+          tr.appendChild(td);
+        });
+
+        if (includeProvenance) {
+          const tdScore = document.createElement('td');
+          const score = cand.overall_confidence !== undefined ? cand.overall_confidence : null;
+          if (score !== null) {
+            const pct = Math.round(score * 100);
+            const scoreColor = pct >= 80 ? 'var(--accent-green)' : (pct >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)');
+            tdScore.innerHTML = `<span style="font-weight: 700; color: ${scoreColor}">${pct}%</span>`;
+          } else {
+            tdScore.innerHTML = '<span style="color: var(--text-dark)">-</span>';
+          }
+          tr.appendChild(tdScore);
+        }
+
+        rowsTbody.appendChild(tr);
+      });
+    }
+
+    function renderCards() {
+      const cardsGrid = document.getElementById('output-cards');
+      cardsGrid.innerHTML = '';
+
+      if (filteredData.length === 0) {
+        cardsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dark); padding: 40px;">No matching records found.</div>`;
+        return;
+      }
+
+      filteredData.forEach(cand => {
+        const card = document.createElement('div');
+        card.className = 'candidate-card';
+
+        // Extract Name & Email (either as simple values or metadata objects)
+        const getValue = (field) => {
+          if (!field) return null;
+          return (typeof field === 'object' && 'value' in field) ? field.value : field;
+        };
+
+        const getSource = (field) => {
+          if (typeof field === 'object' && field !== null && 'source' in field) {
+            return field.source;
+          }
+          return null;
+        };
+
+        const getName = () => getValue(cand.name) || 'Anonymous';
+        const getEmail = () => getValue(cand.email) || 'no-email@provided.com';
+
+        // Card Header
+        let confidenceHtml = '';
+        if (cand.overall_confidence !== undefined) {
+          const pct = Math.round(cand.overall_confidence * 100);
+          confidenceHtml = `
+            <div class="card-confidence">
+              <div class="confidence-percentage">${pct}%</div>
+              <div class="confidence-label">Confidence</div>
+            </div>
+          `;
+        }
+
+        let headerHtml = `
+          <div class="card-header">
+            <div>
+              <div class="card-name">${getName()}</div>
+              <div class="card-email">${getEmail()}</div>
+            </div>
+            ${confidenceHtml}
+          </div>
+        `;
+
+        // Card details (phone, location, skills)
+        let detailsHtml = '';
+        
+        // Phone
+        if (cand.phone !== undefined) {
+          const val = getValue(cand.phone);
+          const src = getSource(cand.phone);
+          detailsHtml += `
+            <div class="card-detail-item">
+              <div class="detail-label">📞 Phone</div>
+              <div class="detail-value-wrapper">
+                <span>${val || '<span style="color: var(--text-dark)">null</span>'}</span>
+                ${src ? `<span class="provenance-tag" title="Source file: ${src}">${src}</span>` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        // Location
+        if (cand.location !== undefined) {
+          const val = getValue(cand.location);
+          const src = getSource(cand.location);
+          detailsHtml += `
+            <div class="card-detail-item">
+              <div class="detail-label">📍 Location</div>
+              <div class="detail-value-wrapper">
+                <span>${val || '<span style="color: var(--text-dark)">null</span>'}</span>
+                ${src ? `<span class="provenance-tag" title="Source file: ${src}">${src}</span>` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        // Skills
+        if (cand.skills !== undefined) {
+          const val = getValue(cand.skills);
+          const src = getSource(cand.skills);
+          
+          let skillsBadges = '<span style="color: var(--text-dark)">none</span>';
+          if (Array.isArray(val) && val.length > 0) {
+            skillsBadges = `
+              <div class="skills-badges-list">
+                ${val.map(s => `<span class="skill-badge">${s}</span>`).join('')}
+              </div>
+            `;
+          }
+
+          detailsHtml += `
+            <div class="card-detail-item">
+              <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>🛠️ Skills</span>
+                ${src ? `<span class="provenance-tag" title="Source file: ${src}">${src}</span>` : ''}
+              </div>
+              ${skillsBadges}
+            </div>
+          `;
+        }
+
+        card.innerHTML = headerHtml + detailsHtml;
+        cardsGrid.appendChild(card);
+      });
+    }
+
+    function renderRawJSON() {
+      const jsonContainer = document.getElementById('output-json');
+      // format filteredData
+      jsonContainer.textContent = JSON.stringify(filteredData, null, 2);
+    }
+
+    // Export utilities
+    function exportData(format) {
+      if (consolidatedData.length === 0) {
+        showToast('error', 'Export Error: No data consolidated yet. Click the button to merge your sources.');
+        return;
+      }
+
+      if (format === 'json') {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(consolidatedData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "consolidated_candidates.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast('success', 'Successfully downloaded consolidated_candidates.json');
+      } else if (format === 'csv') {
+        // Convert to Excel compatible CSV
+        const configFields = ['name', 'email', 'phone', 'location', 'skills'];
+        const includeProvenance = document.getElementById('include-provenance').checked;
+        
+        let headers = [...configFields];
+        if (includeProvenance) {
+          // Append confidence column
+          headers.push('overall_confidence');
+        }
+
+        // Filter headers to only those present in output
+        headers = headers.filter(h => {
+          if (h === 'overall_confidence') return true;
+          return consolidatedData.some(row => row[h] !== undefined);
+        });
+
+        let csvRows = [headers.join(',')];
+
+        consolidatedData.forEach(cand => {
+          const values = headers.map(header => {
+            if (header === 'overall_confidence') {
+              return cand.overall_confidence !== undefined ? cand.overall_confidence : '';
+            }
+
+            const cell = cand[header];
+            if (cell === undefined || cell === null) return '';
+            
+            let val = (typeof cell === 'object' && 'value' in cell) ? cell.value : cell;
+            if (val === null) return '';
+            
+            if (Array.isArray(val)) {
+              val = val.join('; '); // Semicolon separate list items in CSV column
+            }
+
+            // Escape quotes
+            const escaped = ('' + val).replace(/"/g, '""');
+            return `"${escaped}"`;
+          });
+          csvRows.push(values.join(','));
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join('\n'));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", csvContent);
+        downloadAnchor.setAttribute("download", "consolidated_candidates.csv");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast('success', 'Successfully downloaded consolidated_candidates.csv');
+      }
+    }
+
+    // Helper functions
+    function updateStatus(text, state) {
+      document.getElementById('status-text').textContent = text;
+      const dot = document.getElementById('status-dot');
+      dot.className = 'status-dot'; // reset
+      if (state === 'active') dot.classList.add('active');
+      else if (state === 'error') dot.classList.add('error');
+      // 'pending' state leaves dot gray/amber defaults
+    }
+
+    function showToast(type, message) {
+      const toast = document.getElementById('toast');
+      const toastIcon = document.getElementById('toast-icon');
+      const toastMsg = document.getElementById('toast-message');
+
+      toast.className = 'toast'; // reset
+      toast.classList.add(type);
+      
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      else if (type === 'error') icon = '❌';
+      else if (type === 'info') icon = '⚡';
+
+      toastIcon.textContent = icon;
+      toastMsg.textContent = message;
+
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
