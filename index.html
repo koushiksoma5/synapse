@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Candidate Profile Transformer Dashboard</title>
-  <!-- Modern clean typography -->
+  <title>Candidate Profile Normalization & Ingest Dashboard</title>
+  <!-- Premium clean typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   
   <style>
+    /* Default Space Slate theme variables */
     :root {
-      --bg-dark: #0f172a;
-      --panel-bg: rgba(30, 41, 59, 0.7);
-      --panel-border: rgba(255, 255, 255, 0.08);
+      --bg-dark: #0b0f19;
+      --panel-bg: rgba(22, 30, 49, 0.75);
+      --panel-border: rgba(99, 102, 241, 0.15);
       --primary: #6366f1;
       --primary-hover: #4f46e5;
       --accent-green: #10b981;
@@ -25,6 +26,59 @@
       --card-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
       --font-outfit: 'Outfit', sans-serif;
       --font-mono: 'Fira Code', monospace;
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.18) 0%, transparent 40%),
+                     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 40%);
+    }
+
+    /* Emerald Glass Theme */
+    body.theme-emerald {
+      --bg-dark: #040d0a;
+      --panel-bg: rgba(12, 28, 22, 0.75);
+      --panel-border: rgba(16, 185, 129, 0.25);
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --accent-green: #34d399;
+      --accent-orange: #fbbf24;
+      --accent-red: #f87171;
+      --text-main: #ecfdf5;
+      --text-muted: #a7f3d0;
+      --text-dark: #047857;
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.22) 0%, transparent 40%),
+                     radial-gradient(circle at 90% 80%, rgba(52, 211, 153, 0.12) 0%, transparent 40%);
+    }
+
+    /* Cyberpunk Neon Theme */
+    body.theme-cyberpunk {
+      --bg-dark: #0c0014;
+      --panel-bg: rgba(26, 0, 43, 0.85);
+      --panel-border: rgba(244, 63, 94, 0.35);
+      --primary: #f43f5e;
+      --primary-hover: #e11d48;
+      --accent-green: #06b6d4;
+      --accent-orange: #d946ef;
+      --accent-red: #f43f5e;
+      --text-main: #ffe4e6;
+      --text-muted: #fda4af;
+      --text-dark: #9f1239;
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.28) 0%, transparent 45%),
+                     radial-gradient(circle at 90% 80%, rgba(217, 70, 239, 0.18) 0%, transparent 45%);
+    }
+
+    /* Cool Quartz Light Theme */
+    body.theme-quartz {
+      --bg-dark: #f1f5f9;
+      --panel-bg: rgba(255, 255, 255, 0.85);
+      --panel-border: rgba(99, 102, 241, 0.15);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dark: #94a3b8;
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
     }
 
     * {
@@ -33,6 +87,7 @@
       padding: 0;
       font-family: var(--font-outfit);
       -webkit-font-smoothing: antialiased;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     }
 
     body {
@@ -42,16 +97,14 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+      background-image: var(--bg-gradient);
     }
 
     header {
-      padding: 20px 40px;
+      padding: 16px 40px;
       border-bottom: 1px solid var(--panel-border);
       backdrop-filter: blur(12px);
-      background-color: rgba(15, 23, 42, 0.6);
+      background-color: rgba(15, 23, 42, 0.2);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -67,31 +120,59 @@
     }
 
     .logo-icon {
-      font-size: 28px;
+      font-size: 26px;
       animation: float 3s ease-in-out infinite;
     }
 
     h1 {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+      background: linear-gradient(135deg, var(--text-main) 30%, var(--text-muted) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .status-badge {
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .theme-selector-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-selector-label {
       font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    select.theme-dropdown {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .status-badge {
+      font-size: 11px;
       font-weight: 500;
       padding: 6px 12px;
       border-radius: 100px;
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      color: #a5b4fc;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.3s ease;
     }
 
     .status-dot {
@@ -99,25 +180,25 @@
       height: 8px;
       border-radius: 50%;
       background-color: var(--accent-orange);
-      box-shadow: 0 0 10px var(--accent-orange);
+      box-shadow: 0 0 8px var(--accent-orange);
     }
 
     .status-dot.active {
       background-color: var(--accent-green);
-      box-shadow: 0 0 10px var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
     }
 
     .status-dot.error {
       background-color: var(--accent-red);
-      box-shadow: 0 0 10px var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red);
     }
 
     .main-container {
       flex: 1;
       display: flex;
-      padding: 30px;
-      gap: 30px;
-      max-width: 1600px;
+      padding: 24px;
+      gap: 24px;
+      max-width: 1700px;
       margin: 0 auto;
       width: 100%;
     }
@@ -125,7 +206,7 @@
     .panel {
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
-      border-radius: 20px;
+      border-radius: 18px;
       backdrop-filter: blur(20px);
       box-shadow: var(--card-shadow);
       display: flex;
@@ -134,58 +215,57 @@
     }
 
     .left-panel {
-      width: 420px;
+      width: 440px;
       flex-shrink: 0;
     }
 
     .right-panel {
       flex: 1;
-      min-width: 0; /* Prevents flex children from breaking parent layout */
+      min-width: 0;
     }
 
     .panel-header {
-      padding: 20px 25px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--panel-border);
-      background: rgba(15, 23, 42, 0.3);
+      background: rgba(15, 23, 42, 0.15);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     .panel-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .panel-body {
-      padding: 25px;
+      padding: 20px;
       overflow-y: auto;
       flex: 1;
     }
 
-    /* Tabs Component */
     .tabs-header {
       display: flex;
-      background: rgba(15, 23, 42, 0.4);
+      background: rgba(15, 23, 42, 0.2);
       border-radius: 10px;
       padding: 4px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       border: 1px solid var(--panel-border);
     }
 
     .tab-btn {
       flex: 1;
-      padding: 8px 12px;
-      font-size: 13px;
+      padding: 8px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-muted);
       background: transparent;
       border: none;
-      border-radius: 8px;
+      border-radius: 7px;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
@@ -195,9 +275,9 @@
     }
 
     .tab-btn.active {
-      color: #fff;
+      color: var(--text-main);
       background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
     .tab-content {
@@ -209,105 +289,100 @@
       animation: fadeIn 0.3s ease;
     }
 
-    /* Form Fields */
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .form-label {
       display: block;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 12px;
+      font-weight: 600;
       color: var(--text-muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .file-dropzone {
-      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border: 2px dashed var(--panel-border);
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px;
       text-align: center;
-      background: rgba(15, 23, 42, 0.2);
+      background: rgba(15, 23, 42, 0.1);
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .file-dropzone:hover {
       border-color: var(--primary);
-      background: rgba(99, 102, 241, 0.05);
+      background: rgba(99, 102, 241, 0.03);
     }
 
     .file-dropzone.has-files {
       border-color: var(--accent-green);
-      background: rgba(16, 185, 129, 0.05);
+      background: rgba(16, 185, 129, 0.03);
     }
 
     .file-dropzone-icon {
-      font-size: 28px;
-      margin-bottom: 8px;
+      font-size: 26px;
+      margin-bottom: 6px;
       color: var(--text-muted);
-      transition: color 0.3s ease;
-    }
-
-    .file-dropzone:hover .file-dropzone-icon {
-      color: var(--primary);
     }
 
     .file-dropzone-text {
-      font-size: 13px;
-      color: var(--text-muted);
+      font-size: 12px;
+      color: var(--text-main);
     }
 
     .file-dropzone-subtext {
-      font-size: 11px;
-      color: var(--text-dark);
-      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
     .selected-files-list {
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 11px;
       color: var(--accent-green);
-      text-align: left;
-      max-height: 80px;
+      max-height: 100px;
       overflow-y: auto;
     }
 
     .selected-file-item {
       display: flex;
       justify-content: space-between;
-      padding: 4px 6px;
+      padding: 4px 8px;
       background: rgba(255, 255, 255, 0.03);
-      border-radius: 4px;
+      border-radius: 5px;
       margin-bottom: 4px;
       border-left: 2px solid var(--accent-green);
     }
 
     textarea {
       width: 100%;
-      height: 110px;
-      background: rgba(15, 23, 42, 0.4);
+      height: 90px;
+      background: rgba(15, 23, 42, 0.2);
       border: 1px solid var(--panel-border);
       border-radius: 10px;
-      color: #fff;
-      padding: 10px 12px;
-      font-size: 13px;
+      color: var(--text-main);
+      padding: 10px;
+      font-size: 12px;
       resize: vertical;
       font-family: var(--font-mono);
-      transition: border-color 0.2s ease;
+      outline: none;
     }
 
     textarea:focus {
-      outline: none;
       border-color: var(--primary);
     }
 
-    /* Checkboxes & Config Settings */
     .settings-section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 16px 0 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -316,8 +391,8 @@
     .checkbox-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 16px;
     }
 
     .checkbox-container {
@@ -325,81 +400,70 @@
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-muted);
       user-select: none;
     }
 
     .checkbox-container input {
       accent-color: var(--primary);
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
       cursor: pointer;
     }
 
     .config-dropdown-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
     .dropdown-container {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     select {
-      background: rgba(15, 23, 42, 0.5);
+      background: rgba(15, 23, 42, 0.3);
       border: 1px solid var(--panel-border);
       border-radius: 8px;
-      color: #fff;
-      padding: 8px 12px;
-      font-size: 13px;
+      color: var(--text-main);
+      padding: 8px 10px;
+      font-size: 12px;
       cursor: pointer;
       outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    select:focus {
-      border-color: var(--primary);
     }
 
     .action-btn {
-      width: 100%;
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
       color: #fff;
       border: none;
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 14px;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
     }
 
     .action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
     }
 
-    .action-btn:active {
-      transform: translateY(0);
-    }
-
-    /* Right Output Layout */
     .search-bar-container {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 15px 25px;
-      background: rgba(15, 23, 42, 0.2);
+      gap: 12px;
+      padding: 12px 20px;
+      background: rgba(15, 23, 42, 0.1);
       border-bottom: 1px solid var(--panel-border);
     }
 
@@ -410,19 +474,17 @@
 
     .search-input {
       width: 100%;
-      background: rgba(15, 23, 42, 0.4);
+      background: rgba(15, 23, 42, 0.2);
       border: 1px solid var(--panel-border);
       border-radius: 8px;
-      padding: 8px 12px 8px 36px;
-      font-size: 13px;
-      color: #fff;
+      padding: 8px 12px 8px 34px;
+      font-size: 12px;
+      color: var(--text-main);
       outline: none;
-      transition: all 0.2s ease;
     }
 
     .search-input:focus {
       border-color: var(--primary);
-      background: rgba(15, 23, 42, 0.6);
     }
 
     .search-icon {
@@ -431,81 +493,67 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-dark);
-      font-size: 14px;
+      font-size: 12px;
     }
 
     .view-toggles {
       display: flex;
-      background: rgba(15, 23, 42, 0.3);
-      padding: 4px;
+      background: rgba(15, 23, 42, 0.2);
+      padding: 3px;
       border-radius: 8px;
       border: 1px solid var(--panel-border);
     }
 
     .view-toggle-btn {
       padding: 6px 12px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       color: var(--text-muted);
       background: transparent;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s ease;
     }
 
     .view-toggle-btn.active {
-      color: #fff;
+      color: var(--text-main);
       background: rgba(255, 255, 255, 0.06);
     }
 
     .export-btns {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .export-btn {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--panel-border);
-      color: #fff;
+      color: var(--text-main);
       padding: 6px 12px;
-      font-size: 12px;
+      font-size: 11px;
       border-radius: 8px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2;
-    }
-
-    .export-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--text-muted);
     }
 
     .export-btn-primary {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.3);
-      color: #a7f3d0;
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: var(--accent-green);
     }
 
-    .export-btn-primary:hover {
-      background: rgba(16, 185, 129, 0.25);
-      border-color: var(--accent-green);
-    }
-
-    /* Outputs Components */
     .output-content-container {
       flex: 1;
-      padding: 25px;
+      padding: 20px;
       overflow-y: auto;
       min-height: 400px;
       display: flex;
       flex-direction: column;
     }
 
-    /* Empty state */
     .empty-state {
       flex: 1;
       display: flex;
@@ -515,29 +563,27 @@
       color: var(--text-dark);
       text-align: center;
       padding: 40px;
-      animation: fadeIn 0.5s ease;
     }
 
     .empty-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
+      font-size: 44px;
       opacity: 0.5;
+      margin-bottom: 12px;
     }
 
     .empty-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--text-muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .empty-desc {
-      font-size: 13px;
-      max-width: 300px;
+      font-size: 12px;
+      max-width: 320px;
       line-height: 1.5;
     }
 
-    /* Grid / Table View */
     .data-table-container {
       width: 100%;
       overflow-x: auto;
@@ -549,92 +595,103 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     th {
-      background: rgba(15, 23, 42, 0.5);
+      background: rgba(15, 23, 42, 0.3);
       color: var(--text-muted);
       font-weight: 600;
-      padding: 14px 18px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--panel-border);
       text-transform: uppercase;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.5px;
     }
 
     td {
-      padding: 14px 18px;
+      padding: 12px 14px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       color: var(--text-main);
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255, 255, 255, 0.015);
     }
 
     .cell-value {
       line-height: 1.4;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
     .cell-provenance {
       display: block;
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-dark);
       margin-top: 3px;
     }
 
     .badge {
       display: inline-block;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 500;
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 1px 5px;
+      border-radius: 3px;
       text-transform: uppercase;
-      letter-spacing: 0.2px;
     }
 
     .badge-csv {
-      background: rgba(99, 102, 241, 0.15);
-      color: #c7d2fe;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .badge-json {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.2);
     }
 
     .badge-notes {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgba(16, 185, 129, 0.12);
       color: #a7f3d0;
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      border: 1px solid rgba(16, 185, 129, 0.2);
     }
 
     .badge-none {
-      background: rgba(100, 116, 139, 0.15);
+      background: rgba(100, 116, 139, 0.12);
       color: var(--text-muted);
-      border: 1px solid rgba(100, 116, 139, 0.3);
+      border: 1px solid rgba(100, 116, 139, 0.2);
     }
 
-    /* Cards View */
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
       gap: 20px;
     }
 
     .candidate-card {
-      background: rgba(15, 23, 42, 0.3);
+      background: rgba(15, 23, 42, 0.15);
       border: 1px solid var(--panel-border);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 20px;
       position: relative;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 14px;
     }
 
     .candidate-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(99, 102, 241, 0.4);
-      background: rgba(15, 23, 42, 0.5);
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      background: rgba(15, 23, 42, 0.25);
+      box-shadow: 0 12px 24px -10px rgba(0,0,0,0.3);
     }
 
     .card-header {
@@ -642,17 +699,17 @@
       justify-content: space-between;
       align-items: flex-start;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      padding-bottom: 12px;
+      padding-bottom: 10px;
     }
 
     .card-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-main);
     }
 
     .card-email {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       margin-top: 2px;
       font-family: var(--font-mono);
@@ -663,13 +720,13 @@
     }
 
     .confidence-percentage {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--accent-green);
     }
 
     .confidence-label {
-      font-size: 9px;
+      font-size: 8px;
       color: var(--text-dark);
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -682,25 +739,26 @@
     }
 
     .detail-label {
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 9px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-dark);
+      user-select: none;
     }
 
     .detail-value-wrapper {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .provenance-tag {
       font-size: 9px;
       padding: 1px 4px;
       border-radius: 3px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.03);
       color: var(--text-muted);
       border: 1px solid var(--panel-border);
       max-width: 140px;
@@ -712,78 +770,85 @@
     .skills-badges-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
       margin-top: 2px;
     }
 
     .skill-badge {
-      font-size: 11px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 2px 8px;
-      border-radius: 6px;
-      color: #e2e8f0;
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--panel-border);
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: var(--text-main);
     }
 
-    /* Raw JSON View */
     .raw-json-container {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--panel-border);
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px;
       flex: 1;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11px;
       color: #38bdf8;
       overflow: auto;
       white-space: pre;
       line-height: 1.5;
     }
 
-    /* Animations */
+    .toggle-arrow {
+      font-size: 9px;
+      color: var(--text-dark);
+      transition: transform 0.2s ease;
+    }
+
+    .collapsible-section {
+      padding: 6px 0 2px 4px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.04);
+    }
+
     @keyframes float {
       0% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
+      50% { transform: translateY(-4px); }
       100% { transform: translateY(0px); }
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Custom scrollbar */
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
     }
 
     ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.1);
+      background: rgba(0, 0, 0, 0.05);
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 10px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
     }
 
-    /* Toast notification */
     .toast {
       position: fixed;
-      bottom: 25px;
-      right: 25px;
+      bottom: 24px;
+      right: 24px;
       background: rgba(30, 41, 59, 0.95);
       border: 1px solid var(--primary);
       border-left: 4px solid var(--primary);
-      padding: 15px 25px;
+      padding: 12px 20px;
       border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
       color: #fff;
-      font-size: 14px;
+      font-size: 13px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -796,69 +861,73 @@
       transform: translateY(0);
     }
 
-    .toast.success {
-      border-color: var(--accent-green);
-      border-left-color: var(--accent-green);
-    }
-
-    .toast.error {
-      border-color: var(--accent-red);
-      border-left-color: var(--accent-red);
-    }
+    .toast.success { border-color: var(--accent-green); border-left-color: var(--accent-green); }
+    .toast.error { border-color: var(--accent-red); border-left-color: var(--accent-red); }
   </style>
 </head>
-<body>
+<body class="theme-slate">
 
   <header>
     <div class="logo-container">
       <span class="logo-icon">🚀</span>
       <div>
-        <h1>Candidate Profile Transformer</h1>
-        <p style="font-size: 11px; color: var(--text-dark);">Deduplication & Provenance Aggregator</p>
+        <h1>Recruitment Normalization Engine</h1>
+        <p style="font-size: 10px; color: var(--text-dark); font-weight: 500;">Multi-Source Candidate Profile Transitive Deduplicator</p>
       </div>
     </div>
     
-    <div class="status-badge">
-      <div id="status-dot" class="status-dot"></div>
-      <span id="status-text">Ready</span>
+    <div class="header-actions">
+      <div class="theme-selector-container">
+        <span class="theme-selector-label">Theme:</span>
+        <select id="theme-selector" class="theme-dropdown" onchange="changeTheme(this.value)">
+          <option value="slate">🌌 Space Slate</option>
+          <option value="emerald">🟢 Emerald Glass</option>
+          <option value="cyberpunk">⚡ Cyberpunk Neon</option>
+          <option value="quartz">💎 Cool Quartz</option>
+        </select>
+      </div>
+      
+      <div class="status-badge">
+        <div id="status-dot" class="status-dot"></div>
+        <span id="status-text">Ready</span>
+      </div>
     </div>
   </header>
 
   <main class="main-container">
     
-    <!-- LEFT: Ingestion Configurations panel -->
+    <!-- LEFT: Ingestion Configurations Layer -->
     <section class="panel left-panel">
       <div class="panel-header">
         <h2 class="panel-title">📥 Data Ingestion Layer</h2>
       </div>
       
       <div class="panel-body">
-        <!-- Input Mode Tabs -->
         <div class="tabs-header">
           <button type="button" class="tab-btn active" onclick="switchInputMode('files')">Select Files</button>
           <button type="button" class="tab-btn" onclick="switchInputMode('paste')">Paste Raw Text</button>
         </div>
 
-        <!-- TAB 1: File Selectors -->
+        <!-- TAB 1: File selectors -->
         <div id="input-mode-files" class="tab-content active">
           <div class="form-group">
-            <span class="form-label">Structured Data (CSV Files)</span>
+            <span class="form-label">Structured Data (CSV & JSON)</span>
             <div class="file-dropzone" onclick="document.getElementById('csv-file-input').click()">
               <div class="file-dropzone-icon">📊</div>
-              <p class="file-dropzone-text">Click to choose CSV files</p>
-              <p class="file-dropzone-subtext">Accepts multiple CSVs</p>
-              <input type="file" id="csv-file-input" multiple accept=".csv" style="display:none" onchange="handleFileSelection('csv')">
+              <p class="file-dropzone-text">Click to choose CSV or JSON files</p>
+              <p class="file-dropzone-subtext">Accepts multiple files</p>
+              <input type="file" id="csv-file-input" multiple accept=".csv,.json" style="display:none" onchange="handleFileSelection('csv')">
             </div>
             <div id="csv-files-list" class="selected-files-list"></div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 25px;">
-            <span class="form-label">Unstructured Data (TXT Notes)</span>
+          <div class="form-group" style="margin-bottom: 20px;">
+            <span class="form-label">Unstructured Data (Notes & Resumes)</span>
             <div class="file-dropzone" onclick="document.getElementById('txt-file-input').click()">
               <div class="file-dropzone-icon">📝</div>
-              <p class="file-dropzone-text">Click to choose TXT files</p>
-              <p class="file-dropzone-subtext">Accepts multiple text documents</p>
-              <input type="file" id="txt-file-input" multiple accept=".txt,.log" style="display:none" onchange="handleFileSelection('txt')">
+              <p class="file-dropzone-text">Click to choose TXT or PDF files</p>
+              <p class="file-dropzone-subtext">Accepts text notes, text resumes, and PDF files</p>
+              <input type="file" id="txt-file-input" multiple accept=".txt,.log,.pdf" style="display:none" onchange="handleFileSelection('txt')">
             </div>
             <div id="txt-files-list" class="selected-files-list"></div>
           </div>
@@ -868,38 +937,195 @@
         <div id="input-mode-paste" class="tab-content">
           <div class="form-group">
             <span class="form-label">Paste CSV Content</span>
-            <textarea id="csv-text-area" placeholder="name,email,phone&#10;John Doe,john@example.com,+1234567890"></textarea>
+            <textarea id="csv-text-area" placeholder="name,email,phone,location&#10;John Doe,john@example.com,+1234567890,SF"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <span class="form-label">Paste JSON Content</span>
+            <textarea id="json-text-area" placeholder='[{"full_name": "John Doe", "emails": ["john@example.com"]}]'></textarea>
           </div>
 
-          <div class="form-group" style="margin-bottom: 25px;">
-            <span class="form-label">Paste Candidate Notes Text</span>
-            <textarea id="notes-text-area" placeholder="Candidate Name: John Doe&#10;Email contact: john@example.com&#10;Skills: Python, Javascript, React&#10;Phone number: +1234567890"></textarea>
+          <div class="form-group" style="margin-bottom: 20px;">
+            <span class="form-label">Paste Recruiter Notes Text</span>
+            <textarea id="notes-text-area" placeholder="Candidate Name: John Doe&#10;Email: john@example.com&#10;Skills: Python, Go&#10;Location: Austin, TX"></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <span class="form-label">GitHub Profile URL</span>
+            <input type="text" id="github-url-input" placeholder="https://github.com/username" style="width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); color: var(--text-light); font-size: 14px; outline: none; transition: border-color 0.2s;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <span class="form-label">LinkedIn Profile URL</span>
+            <input type="text" id="linkedin-url-input" placeholder="https://linkedin.com/in/username" style="width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); color: var(--text-light); font-size: 14px; outline: none; transition: border-color 0.2s;">
           </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid var(--panel-border); margin: 20px 0;">
+        <hr style="border: 0; border-top: 1px solid var(--panel-border); margin: 15px 0;">
 
         <!-- Projection Config Controls -->
-        <div class="settings-section-title">⚙️ Output Projection Rules</div>
-        
-        <span class="form-label">Fields to Project</span>
-        <div class="checkbox-grid">
-          <label class="checkbox-container">
-            <input type="checkbox" id="field-name" checked> Name
-          </label>
-          <label class="checkbox-container">
-            <input type="checkbox" id="field-email" checked disabled> Email (Key)
-          </label>
-          <label class="checkbox-container">
-            <input type="checkbox" id="field-phone" checked> Phone
-          </label>
-          <label class="checkbox-container">
-            <input type="checkbox" id="field-location" checked> Location
-          </label>
-          <label class="checkbox-container">
-            <input type="checkbox" id="field-skills" checked> Skills
-          </label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="settings-section-title" style="margin: 0;">⚙️ Master Projection Rules</div>
+          <button class="btn btn-secondary" onclick="document.getElementById('config-file-input').click()" style="padding: 4px 10px; font-size: 12px; line-height: 1; border-radius: 4px;">📁 Load Config JSON</button>
+          <input type="file" id="config-file-input" accept=".json" style="display:none" onchange="loadConfigFile()">
         </div>
+        
+        <span class="form-label">Fields to Project & Remap Target Keys</span>
+        <table class="projection-rules-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); overflow: hidden;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--panel-border);">
+              <th style="padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-dark); font-size: 11px; text-transform: uppercase;">Field</th>
+              <th style="padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-dark); font-size: 11px; text-transform: uppercase;">Norm</th>
+              <th style="padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-dark); font-size: 11px; text-transform: uppercase;">Output Key</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ID -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-candidate_id" checked> ID
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-candidate_id" value="candidate_id" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Name -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-full_name" checked> Name
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-full_name" value="full_name" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Emails -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-emails" checked> Emails
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-emails" value="emails" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Phones -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-phones" checked> Phones
+                </label>
+              </td>
+              <td style="padding: 6px 10px;">
+                <select id="norm-phones" style="padding: 2px 4px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 11px; outline: none; width: 62px;">
+                  <option value="E164" selected>E.164</option>
+                  <option value="none">Raw</option>
+                </select>
+              </td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-phones" value="phones" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Location -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-location" checked> Location
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-location" value="location" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Links -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-links" checked> Links
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-links" value="links" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Headline -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-headline" checked> Headline
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-headline" value="headline" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Exp Years -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-years_experience" checked> Exp Years
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-years_experience" value="years_experience" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Skills -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-skills" checked> Skills
+                </label>
+              </td>
+              <td style="padding: 6px 10px;">
+                <select id="norm-skills" style="padding: 2px 4px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 11px; outline: none; width: 62px;">
+                  <option value="lowercase" selected>lower</option>
+                  <option value="uppercase">UPPER</option>
+                  <option value="titlecase">Title</option>
+                  <option value="none">Raw</option>
+                </select>
+              </td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-skills" value="skills" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Jobs -->
+            <tr style="border-bottom: 1px solid var(--panel-border);">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-experience" checked> Jobs
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-experience" value="experience" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+            <!-- Education -->
+            <tr style="border-bottom: none;">
+              <td style="padding: 8px 10px; text-align: left;">
+                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
+                  <input type="checkbox" id="field-education" checked> Education
+                </label>
+              </td>
+              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
+              <td style="padding: 8px 10px;">
+                <input type="text" id="rename-education" value="education" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         <div class="config-dropdown-grid">
           <div class="dropdown-container">
@@ -910,7 +1136,7 @@
             </select>
           </div>
 
-          <div class="dropdown-container" style="margin-top: 10px;">
+          <div class="dropdown-container" style="margin-top: 6px;">
             <label class="form-label">Skills Case Mapping</label>
             <select id="skills-normalization">
               <option value="lowercase" selected>lowercase</option>
@@ -920,7 +1146,7 @@
             </select>
           </div>
 
-          <div class="dropdown-container" style="margin-top: 10px;">
+          <div class="dropdown-container" style="margin-top: 6px;">
             <label class="form-label">Missing Field Fallback Policy</label>
             <select id="on-missing">
               <option value="null" selected>Assign Null</option>
@@ -930,19 +1156,23 @@
           </div>
         </div>
 
-        <label class="checkbox-container" style="margin: 20px 0 25px 0;">
+        <label class="checkbox-container" style="margin: 15px 0 18px 0;">
           <input type="checkbox" id="include-provenance" checked> Include Trace logs & Provenance metadata
         </label>
 
-        <button class="action-btn" onclick="executeTransformation()">
-          <span>⚡ Run Consolidation Engine</span>
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button class="action-btn" onclick="executeTransformation()" style="flex: 2;">
+            <span>⚡ Run Consolidation Engine</span>
+          </button>
+          <button class="action-btn" onclick="loadDemoData()" style="flex: 1; background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);">
+            <span>💡 Demo</span>
+          </button>
+        </div>
       </div>
     </section>
 
     <!-- RIGHT: Dynamic Outputs Panel -->
     <section class="panel right-panel">
-      <!-- Search & Tab headers -->
       <div class="search-bar-container">
         <div class="search-input-wrapper">
           <span class="search-icon">🔍</span>
@@ -950,7 +1180,8 @@
         </div>
         
         <div class="view-toggles">
-          <button class="view-toggle-btn active" id="btn-view-grid" onclick="switchOutputView('grid')">Spreadsheet Grid</button>
+          <button class="view-toggle-btn active" id="btn-view-grid" onclick="switchOutputView('grid')">Master Grid</button>
+          <button class="view-toggle-btn" id="btn-view-projected" onclick="switchOutputView('projected')">Projected Table</button>
           <button class="view-toggle-btn" id="btn-view-cards" onclick="switchOutputView('cards')">Profile Cards</button>
           <button class="view-toggle-btn" id="btn-view-json" onclick="switchOutputView('json')">JSON Code</button>
         </div>
@@ -967,27 +1198,31 @@
         <div id="output-empty" class="empty-state">
           <div class="empty-icon">📊</div>
           <h3 class="empty-title">Awaiting Input Stream</h3>
-          <p class="empty-desc">Upload source files or paste text data in the left panel, and click "Run Consolidation Engine" to start processing.</p>
+          <p class="empty-desc">Upload files or paste text data in the left panel, or click "Demo" to load and run sample overlapping candidate streams.</p>
         </div>
 
         <!-- State: Grid View -->
         <div id="output-grid" class="data-table-container" style="display: none;">
           <table>
             <thead>
-              <tr id="table-headers">
-                <!-- Headers dynamically populated -->
-              </tr>
+              <tr id="table-headers"></tr>
             </thead>
-            <tbody id="table-rows">
-              <!-- Rows dynamically populated -->
-            </tbody>
+            <tbody id="table-rows"></tbody>
+          </table>
+        </div>
+
+        <!-- State: Projected Grid View -->
+        <div id="output-projected" class="data-table-container" style="display: none;">
+          <table>
+            <thead>
+              <tr id="projected-headers"></tr>
+            </thead>
+            <tbody id="projected-rows"></tbody>
           </table>
         </div>
 
         <!-- State: Cards View -->
-        <div id="output-cards" class="cards-grid" style="display: none;">
-          <!-- Cards dynamically populated -->
-        </div>
+        <div id="output-cards" class="cards-grid" style="display: none;"></div>
 
         <!-- State: Raw JSON View -->
         <div id="output-json" class="raw-json-container" style="display: none;"></div>
@@ -1008,13 +1243,18 @@
     let outputView = 'grid';
     let rawCsvFiles = [];
     let rawTxtFiles = [];
-    let consolidatedData = []; // Full raw payload from server
-    let filteredData = []; // Searched dataset
+    let rawJsonFiles = [];
+    let masterData = [];
+    let filteredMasterData = [];
+    let projectedData = [];
+    let filteredProjectedData = [];
+    let consolidatedData = [];
+    let filteredData = [];
 
     // Ingest files content in-memory
     function handleFileSelection(type) {
-      const fileInput = document.getElementById(`${type}-file-input`);
-      const fileListDiv = document.getElementById(`${type}-files-list`);
+      const fileInput = document.getElementById(`${type === 'csv' ? 'csv' : 'txt'}-file-input`);
+      const fileListDiv = document.getElementById(`${type === 'csv' ? 'csv' : 'txt'}-files-list`);
       const dropzone = fileInput.closest('.file-dropzone');
       
       const files = Array.from(fileInput.files);
@@ -1023,38 +1263,66 @@
       const filePromises = files.map(file => {
         return new Promise((resolve) => {
           const reader = new FileReader();
+          const isPdf = file.name.toLowerCase().endsWith('.pdf');
+          
           reader.onload = (e) => {
-            resolve({
-              name: file.name,
-              content: e.target.result
-            });
+            if (isPdf) {
+              const base64Data = e.target.result.split(',')[1];
+              resolve({
+                name: file.name,
+                content: base64Data,
+                is_pdf: true
+              });
+            } else {
+              resolve({
+                name: file.name,
+                content: e.target.result,
+                is_pdf: false
+              });
+            }
           };
-          reader.readAsText(file);
+
+          if (isPdf) {
+            reader.readAsDataURL(file);
+          } else {
+            reader.readAsText(file);
+          }
         });
       });
 
       Promise.all(filePromises).then(processedFiles => {
         if (type === 'csv') {
-          rawCsvFiles = processedFiles;
+          processedFiles.forEach(f => {
+            if (f.name.toLowerCase().endsWith('.json')) {
+              rawJsonFiles.push(f);
+            } else {
+              rawCsvFiles.push(f);
+            }
+          });
+          
+          fileListDiv.innerHTML = '';
+          [...rawCsvFiles, ...rawJsonFiles].forEach(f => {
+            const item = document.createElement('div');
+            item.className = 'selected-file-item';
+            item.innerHTML = `<span>📄 ${f.name}</span> <span>(${(f.content.length / 1024).toFixed(1)} KB)</span>`;
+            fileListDiv.appendChild(item);
+          });
         } else {
-          rawTxtFiles = processedFiles;
+          processedFiles.forEach(f => {
+            rawTxtFiles.push(f);
+          });
+          fileListDiv.innerHTML = '';
+          rawTxtFiles.forEach(f => {
+            const item = document.createElement('div');
+            item.className = 'selected-file-item';
+            const sizeLabel = f.is_pdf ? 'PDF Resume' : `${(f.content.length / 1024).toFixed(1)} KB`;
+            item.innerHTML = `<span>📄 ${f.name}</span> <span>(${sizeLabel})</span>`;
+            fileListDiv.appendChild(item);
+          });
         }
 
-        // Update list display
-        fileListDiv.innerHTML = '';
-        processedFiles.forEach(f => {
-          const item = document.createElement('div');
-          item.className = 'selected-file-item';
-          item.innerHTML = `
-            <span>📄 ${f.name}</span>
-            <span>${(f.content.length / 1024).toFixed(1)} KB</span>
-          `;
-          fileListDiv.appendChild(item);
-        });
-
-        // Toggle dropzone style
         dropzone.classList.add('has-files');
-        showToast('success', `Loaded ${processedFiles.length} ${type.toUpperCase()} file(s) successfully!`);
+        showToast('success', `Loaded ${processedFiles.length} file(s) successfully!`);
       });
     }
 
@@ -1063,19 +1331,21 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(cont => cont.classList.remove('active'));
       
-      // Update btn state
-      event.target.classList.add('active');
+      // Update active state
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(mode === 'files' ? 'files' : 'paste'));
+      if (targetBtn) targetBtn.classList.add('active');
       document.getElementById(`input-mode-${mode}`).classList.add('active');
     }
 
     function switchOutputView(view) {
       outputView = view;
       document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`btn-view-${view}`).classList.add('active');
+      const activeBtn = document.getElementById(`btn-view-${view}`);
+      if (activeBtn) activeBtn.classList.add('active');
 
-      // Hide all output panels
       document.getElementById('output-empty').style.display = 'none';
       document.getElementById('output-grid').style.display = 'none';
+      document.getElementById('output-projected').style.display = 'none';
       document.getElementById('output-cards').style.display = 'none';
       document.getElementById('output-json').style.display = 'none';
 
@@ -1084,10 +1354,12 @@
         return;
       }
 
-      // Display the selected panel
       if (view === 'grid') {
         document.getElementById('output-grid').style.display = 'block';
-        renderGrid();
+        renderMasterGrid();
+      } else if (view === 'projected') {
+        document.getElementById('output-projected').style.display = 'block';
+        renderProjectedGrid();
       } else if (view === 'cards') {
         document.getElementById('output-cards').style.display = 'grid';
         renderCards();
@@ -1099,17 +1371,25 @@
 
     // Call Local Server API
     async function executeTransformation() {
-      // Validate inputs: At least one structured or unstructured data is required!
       let hasStructured = false;
       let hasUnstructured = false;
 
       let payload = {
         csv_files: [],
         txt_files: [],
+        json_files: [],
         csv_text: '',
         notes_text: '',
+        json_text: '',
+        github_url: '',
+        linkedin_url: '',
         config: {
           fields: [],
+          rename: {},
+          normalizations: {
+            phones: document.getElementById('norm-phones').value,
+            skills: document.getElementById('norm-skills').value
+          },
           phone_normalization: document.getElementById('phone-normalization').value,
           skills_normalization: document.getElementById('skills-normalization').value,
           on_missing: document.getElementById('on-missing').value,
@@ -1117,187 +1397,337 @@
         }
       };
 
-      // Populate configurations
-      const configFields = ['name', 'phone', 'location', 'skills'];
-      payload.config.fields.push('email'); // Email is mandatory primary identifier
+      const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
       configFields.forEach(f => {
         if (document.getElementById(`field-${f}`).checked) {
           payload.config.fields.push(f);
         }
+        const renameInput = document.getElementById(`rename-${f}`);
+        if (renameInput && renameInput.value.trim() && renameInput.value.trim() !== f) {
+          payload.config.rename[f] = renameInput.value.trim();
+        }
       });
 
-      if (inputMode === 'files') {
-        payload.csv_files = rawCsvFiles;
-        payload.txt_files = rawTxtFiles;
-        hasStructured = rawCsvFiles.length > 0;
-        hasUnstructured = rawTxtFiles.length > 0;
-      } else {
-        payload.csv_text = document.getElementById('csv-text-area').value.trim();
-        payload.notes_text = document.getElementById('notes-text-area').value.trim();
-        hasStructured = payload.csv_text.length > 0;
-        hasUnstructured = payload.notes_text.length > 0;
-      }
+      payload.csv_files = rawCsvFiles;
+      payload.txt_files = rawTxtFiles;
+      payload.json_files = rawJsonFiles;
 
-      // Mandatory validation check: at least 1 input source in total is required!
+      payload.csv_text = document.getElementById('csv-text-area').value.trim();
+      payload.json_text = document.getElementById('json-text-area').value.trim();
+      payload.notes_text = document.getElementById('notes-text-area').value.trim();
+      payload.github_url = document.getElementById('github-url-input').value.trim();
+      payload.linkedin_url = document.getElementById('linkedin-url-input').value.trim();
+      
+      hasStructured = rawCsvFiles.length > 0 || rawJsonFiles.length > 0 || payload.csv_text.length > 0 || payload.json_text.length > 0;
+      hasUnstructured = rawTxtFiles.length > 0 || payload.notes_text.length > 0 || payload.github_url.length > 0 || payload.linkedin_url.length > 0;
+
       if (!hasStructured && !hasUnstructured) {
-        showToast('error', 'Validation Error: Please select or enter at least ONE structured (CSV) or unstructured (Notes) data source.');
-        updateStatus('Validation Error: Missing Input Sources', 'error');
+        showToast('error', 'Validation Error: Please select or enter at least ONE structured or unstructured data source.');
+        updateStatus('Validation Error', 'error');
         return;
       }
 
       updateStatus('Running engine...', 'pending');
-      showToast('info', 'Executing data consolidation pipeline...');
+      showToast('info', 'Consolidating multi-source candidate profiles...');
 
       try {
         const response = await fetch('/api/transform', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
         const result = await response.json();
-        
         if (!response.ok) {
           throw new Error(result.error || 'Server consolidation error');
         }
 
-        consolidatedData = result.data;
-        filteredData = [...consolidatedData];
+        masterData = result.master_data;
+        filteredMasterData = [...masterData];
+        projectedData = result.projected_data;
+        filteredProjectedData = [...projectedData];
         
-        updateStatus(`Completed - Consolidated ${consolidatedData.length} profile(s)`, 'active');
-        showToast('success', `Pipeline succeeded: consolidated ${consolidatedData.length} profile(s).`);
-
-        // Automatically view results
+        consolidatedData = projectedData;
+        filteredData = filteredProjectedData;
+        
+        updateStatus(`Consolidated ${masterData.length} profile(s)`, 'active');
+        showToast('success', `Pipeline succeeded: normalized ${consolidatedData.length} profile(s).`);
         switchOutputView(outputView);
-
       } catch (err) {
         console.error(err);
-        updateStatus('Pipeline Ingest Error', 'error');
+        updateStatus('Pipeline Error', 'error');
         showToast('error', err.message);
-        
         consolidatedData = [];
         filteredData = [];
         switchOutputView(outputView);
       }
     }
 
-    // Dynamic Renderings
     function handleSearch() {
       const query = document.getElementById('search-box').value.toLowerCase().trim();
-      if (!query) {
-        filteredData = [...consolidatedData];
-      } else {
-        filteredData = consolidatedData.filter(cand => {
-          // Helper to check nested field content
-          const checkField = (fieldVal) => {
-            if (!fieldVal) return false;
-            let val = (typeof fieldVal === 'object' && fieldVal !== null && 'value' in fieldVal) ? fieldVal.value : fieldVal;
-            if (!val) return false;
-            if (Array.isArray(val)) {
-              return val.some(item => String(item).toLowerCase().includes(query));
+      const checkField = (fieldVal) => {
+        if (!fieldVal) return false;
+        let val = (typeof fieldVal === 'object' && fieldVal !== null && 'value' in fieldVal) ? fieldVal.value : fieldVal;
+        if (!val) return false;
+        if (Array.isArray(val)) {
+          return val.some(item => {
+            if (typeof item === 'object') {
+              return JSON.stringify(item).toLowerCase().includes(query);
             }
-            return String(val).toLowerCase().includes(query);
-          };
+            return String(item).toLowerCase().includes(query);
+          });
+        }
+        if (typeof val === 'object') {
+          return JSON.stringify(val).toLowerCase().includes(query);
+        }
+        return String(val).toLowerCase().includes(query);
+      };
 
-          // Search in all standard properties
-          return checkField(cand.name) || 
-                 checkField(cand.email) || 
-                 checkField(cand.phone) || 
+      if (!query) {
+        filteredMasterData = [...masterData];
+        filteredProjectedData = [...projectedData];
+        filteredData = [...projectedData];
+      } else {
+        filteredMasterData = masterData.filter(cand => {
+          return checkField(cand.candidate_id) ||
+                 checkField(cand.full_name) || 
+                 checkField(cand.emails) || 
+                 checkField(cand.phones) || 
                  checkField(cand.location) || 
+                 checkField(cand.links) ||
+                 checkField(cand.headline) ||
                  checkField(cand.skills);
         });
+
+        filteredProjectedData = projectedData.filter(cand => {
+          return Object.keys(cand).some(k => checkField(cand[k]));
+        });
+        
+        filteredData = filteredProjectedData;
       }
 
-      // Re-render active view
-      if (outputView === 'grid') renderGrid();
+      if (outputView === 'grid') renderMasterGrid();
+      else if (outputView === 'projected') renderProjectedGrid();
       else if (outputView === 'cards') renderCards();
       else if (outputView === 'json') renderRawJSON();
     }
 
-    function renderGrid() {
+    function getRemappedKey(field) {
+      const renameInput = document.getElementById(`rename-${field}`);
+      return (renameInput && renameInput.value.trim()) ? renameInput.value.trim() : field;
+    }
+
+    function renderMasterGrid() {
       const headersTr = document.getElementById('table-headers');
       const rowsTbody = document.getElementById('table-rows');
       
       headersTr.innerHTML = '';
       rowsTbody.innerHTML = '';
 
-      if (filteredData.length === 0) {
-        rowsTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dark); padding: 30px;">No matching records found.</td></tr>`;
+      if (filteredMasterData.length === 0) {
+        rowsTbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-dark); padding: 30px;">No matching records found.</td></tr>`;
         return;
       }
 
-      // Get fields list from first row schema or checkboxes
-      const configFields = ['name', 'email', 'phone', 'location', 'skills'];
+      const canonicalFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
       const includeProvenance = document.getElementById('include-provenance').checked;
 
-      // Make headers
-      configFields.forEach(f => {
-        // Only render headers for fields present in output
-        const hasField = filteredData.some(row => row[f] !== undefined);
-        if (hasField) {
-          const th = document.createElement('th');
-          th.textContent = f;
-          headersTr.appendChild(th);
-        }
+      // Always render headers for ALL 11 canonical fields in the Master grid
+      canonicalFields.forEach(f => {
+        const th = document.createElement('th');
+        th.textContent = f.replace('_', ' ');
+        headersTr.appendChild(th);
       });
       
       if (includeProvenance) {
-        const thScore = document.createElement('th');
-        thScore.textContent = 'Confidence';
-        headersTr.appendChild(thScore);
+        const thConf = document.createElement('th');
+        thConf.textContent = 'Confidence';
+        headersTr.appendChild(thConf);
       }
 
-      // Render Rows
-      filteredData.forEach(cand => {
+      // Render cell rows for Master records
+      filteredMasterData.forEach(cand => {
         const tr = document.createElement('tr');
         
-        configFields.forEach(f => {
-          if (!filteredData.some(row => row[f] !== undefined)) return; // Skip columns not included
-          
+        canonicalFields.forEach(f => {
           const td = document.createElement('td');
           const cellData = cand[f];
           
           if (cellData === undefined || cellData === null) {
             td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
-          } else if (typeof cellData === 'object' && 'value' in cellData) {
-            // Provenance mode is active
-            let val = cellData.value;
-            let source = cellData.source || 'none';
-            let conf = cellData.confidence !== undefined ? cellData.confidence : null;
-            
-            if (val === null) {
+          } else {
+            let val = cellData;
+            let source = null;
+            let conf = null;
+
+            if (typeof cellData === 'object' && cellData !== null && 'value' in cellData) {
+              val = cellData.value;
+              source = cellData.source;
+              conf = cellData.confidence;
+            }
+
+            if (val === null || val === undefined) {
               td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
             } else {
-              let displayVal = Array.isArray(val) ? val.join(', ') : val;
-              let badgeClass = source.toLowerCase().includes('csv') ? 'badge-csv' : (source.toLowerCase().includes('none') ? 'badge-none' : 'badge-notes');
-              td.innerHTML = `
-                <div class="cell-value">${displayVal}</div>
-                <div class="cell-provenance">
-                  <span class="badge ${badgeClass}">${source}</span>
-                  <span>(${Math.round(conf * 100)}%)</span>
-                </div>
-              `;
+              let displayVal = '';
+              if (f === 'location' && typeof val === 'object') {
+                displayVal = [val.city, val.state, val.country].filter(Boolean).join(', ') || 'N/A';
+              } else if (f === 'links' && Array.isArray(val)) {
+                displayVal = val.map(l => l.url).join(' | ');
+              } else if (f === 'experience' && Array.isArray(val)) {
+                displayVal = val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
+              } else if (f === 'education' && Array.isArray(val)) {
+                displayVal = val.map(e => `${e.degree} @ ${e.institution}`).join('; ');
+              } else if (Array.isArray(val)) {
+                displayVal = val.join(', ');
+              } else {
+                displayVal = val;
+              }
+
+              td.setAttribute('title', displayVal);
+              if (source) {
+                let badgeClass = source.toLowerCase().includes('csv') ? 'badge-csv' : (source.toLowerCase().includes('json') ? 'badge-json' : (source.toLowerCase().includes('none') ? 'badge-none' : 'badge-notes'));
+                td.innerHTML = `
+                  <div class="cell-value">${displayVal}</div>
+                  <div class="cell-provenance">
+                    <span class="badge ${badgeClass}">${source}</span>
+                    <span>(${Math.round(conf * 100)}%)</span>
+                  </div>
+                `;
+              } else {
+                td.innerHTML = `<div class="cell-value">${displayVal}</div>`;
+              }
             }
-          } else {
-            // Simple value mode
-            let displayVal = Array.isArray(cellData) ? cellData.join(', ') : cellData;
-            td.innerHTML = `<div class="cell-value">${displayVal}</div>`;
           }
-          
           tr.appendChild(td);
         });
 
         if (includeProvenance) {
           const tdScore = document.createElement('td');
-          const score = cand.overall_confidence !== undefined ? cand.overall_confidence : null;
-          if (score !== null) {
+          const score = cand.overall_confidence;
+          if (score !== undefined && score !== null) {
             const pct = Math.round(score * 100);
             const scoreColor = pct >= 80 ? 'var(--accent-green)' : (pct >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)');
             tdScore.innerHTML = `<span style="font-weight: 700; color: ${scoreColor}">${pct}%</span>`;
           } else {
-            tdScore.innerHTML = '<span style="color: var(--text-dark)">-</span>';
+            tdScore.innerHTML = '-';
+          }
+          tr.appendChild(tdScore);
+        }
+
+        rowsTbody.appendChild(tr);
+      });
+    }
+
+    function renderProjectedGrid() {
+      const headersTr = document.getElementById('projected-headers');
+      const rowsTbody = document.getElementById('projected-rows');
+      
+      headersTr.innerHTML = '';
+      rowsTbody.innerHTML = '';
+
+      if (filteredProjectedData.length === 0) {
+        rowsTbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-dark); padding: 30px;">No matching records found.</td></tr>`;
+        return;
+      }
+
+      const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
+      const includeProvenance = document.getElementById('include-provenance').checked;
+
+      // Extract only checked projection fields and their remapped names
+      const activeFields = [];
+      configFields.forEach(f => {
+        const chk = document.getElementById(`field-${f}`);
+        if (chk && chk.checked) {
+          const renameVal = document.getElementById(`rename-${f}`).value.trim() || f;
+          activeFields.push({
+            canonical: f,
+            remapped: renameVal
+          });
+        }
+      });
+
+      // Render column headers
+      activeFields.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col.remapped.replace('_', ' ');
+        headersTr.appendChild(th);
+      });
+      
+      if (includeProvenance) {
+        const thConf = document.createElement('th');
+        thConf.textContent = 'Confidence';
+        headersTr.appendChild(thConf);
+      }
+
+      // Render cell rows
+      filteredProjectedData.forEach(cand => {
+        const tr = document.createElement('tr');
+        
+        activeFields.forEach(col => {
+          const td = document.createElement('td');
+          const cellData = cand[col.remapped];
+          
+          if (cellData === undefined || cellData === null) {
+            td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
+          } else {
+            let val = cellData;
+            let source = null;
+            let conf = null;
+
+            if (typeof cellData === 'object' && cellData !== null && 'value' in cellData) {
+              val = cellData.value;
+              source = cellData.source;
+              conf = cellData.confidence;
+            }
+
+            if (val === null || val === undefined) {
+              td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
+            } else {
+              let displayVal = '';
+              const f = col.canonical;
+              if (f === 'location' && typeof val === 'object') {
+                displayVal = [val.city, val.state, val.country].filter(Boolean).join(', ') || 'N/A';
+              } else if (f === 'links' && Array.isArray(val)) {
+                displayVal = val.map(l => l.url).join(' | ');
+              } else if (f === 'experience' && Array.isArray(val)) {
+                displayVal = val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
+              } else if (f === 'education' && Array.isArray(val)) {
+                displayVal = val.map(e => `${e.degree} @ ${e.institution}`).join('; ');
+              } else if (Array.isArray(val)) {
+                displayVal = val.join(', ');
+              } else {
+                displayVal = val;
+              }
+
+              td.setAttribute('title', displayVal);
+              if (source) {
+                let badgeClass = source.toLowerCase().includes('csv') ? 'badge-csv' : (source.toLowerCase().includes('json') ? 'badge-json' : (source.toLowerCase().includes('none') ? 'badge-none' : 'badge-notes'));
+                td.innerHTML = `
+                  <div class="cell-value">${displayVal}</div>
+                  <div class="cell-provenance">
+                    <span class="badge ${badgeClass}">${source}</span>
+                    <span>(${Math.round(conf * 100)}%)</span>
+                  </div>
+                `;
+              } else {
+                td.innerHTML = `<div class="cell-value">${displayVal}</div>`;
+              }
+            }
+          }
+          tr.appendChild(td);
+        });
+
+        if (includeProvenance) {
+          const tdScore = document.createElement('td');
+          const overallConfKey = getRemappedKey('overall_confidence');
+          const score = cand[overallConfKey] !== undefined ? cand[overallConfKey] : cand.overall_confidence;
+          if (score !== undefined && score !== null) {
+            const pct = Math.round(score * 100);
+            const scoreColor = pct >= 80 ? 'var(--accent-green)' : (pct >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)');
+            tdScore.innerHTML = `<span style="font-weight: 700; color: ${scoreColor}">${pct}%</span>`;
+          } else {
+            tdScore.innerHTML = '-';
           }
           tr.appendChild(tdScore);
         }
@@ -1319,26 +1749,32 @@
         const card = document.createElement('div');
         card.className = 'candidate-card';
 
-        // Extract Name & Email (either as simple values or metadata objects)
         const getValue = (field) => {
           if (!field) return null;
-          return (typeof field === 'object' && 'value' in field) ? field.value : field;
+          return (typeof field === 'object' && field !== null && 'value' in field) ? field.value : field;
         };
 
         const getSource = (field) => {
-          if (typeof field === 'object' && field !== null && 'source' in field) {
-            return field.source;
-          }
+          if (typeof field === 'object' && field !== null && 'source' in field) return field.source;
           return null;
         };
 
-        const getName = () => getValue(cand.name) || 'Anonymous';
-        const getEmail = () => getValue(cand.email) || 'no-email@provided.com';
+        const getFieldData = (canonicalField) => {
+          const remappedKey = getRemappedKey(canonicalField);
+          return cand[remappedKey];
+        };
 
-        // Card Header
+        const getName = () => getValue(getFieldData('full_name')) || 'Anonymous';
+        const getEmailStr = () => {
+          const arr = getValue(getFieldData('emails'));
+          return Array.isArray(arr) && arr.length > 0 ? arr.join(', ') : 'no-email@provided.com';
+        };
+
         let confidenceHtml = '';
-        if (cand.overall_confidence !== undefined) {
-          const pct = Math.round(cand.overall_confidence * 100);
+        const overallConfKey = getRemappedKey('overall_confidence');
+        const overallConfVal = cand[overallConfKey] !== undefined ? cand[overallConfKey] : cand.overall_confidence;
+        if (overallConfVal !== undefined) {
+          const pct = Math.round(overallConfVal * 100);
           confidenceHtml = `
             <div class="card-confidence">
               <div class="confidence-percentage">${pct}%</div>
@@ -1351,66 +1787,180 @@
           <div class="card-header">
             <div>
               <div class="card-name">${getName()}</div>
-              <div class="card-email">${getEmail()}</div>
+              <div class="card-email">${getEmailStr()}</div>
             </div>
             ${confidenceHtml}
           </div>
         `;
 
-        // Card details (phone, location, skills)
         let detailsHtml = '';
         
-        // Phone
-        if (cand.phone !== undefined) {
-          const val = getValue(cand.phone);
-          const src = getSource(cand.phone);
-          detailsHtml += `
-            <div class="card-detail-item">
-              <div class="detail-label">📞 Phone</div>
-              <div class="detail-value-wrapper">
-                <span>${val || '<span style="color: var(--text-dark)">null</span>'}</span>
-                ${src ? `<span class="provenance-tag" title="Source file: ${src}">${src}</span>` : ''}
-              </div>
-            </div>
-          `;
-        }
-
-        // Location
-        if (cand.location !== undefined) {
-          const val = getValue(cand.location);
-          const src = getSource(cand.location);
-          detailsHtml += `
-            <div class="card-detail-item">
-              <div class="detail-label">📍 Location</div>
-              <div class="detail-value-wrapper">
-                <span>${val || '<span style="color: var(--text-dark)">null</span>'}</span>
-                ${src ? `<span class="provenance-tag" title="Source file: ${src}">${src}</span>` : ''}
-              </div>
-            </div>
-          `;
-        }
-
-        // Skills
-        if (cand.skills !== undefined) {
-          const val = getValue(cand.skills);
-          const src = getSource(cand.skills);
-          
-          let skillsBadges = '<span style="color: var(--text-dark)">none</span>';
-          if (Array.isArray(val) && val.length > 0) {
-            skillsBadges = `
-              <div class="skills-badges-list">
-                ${val.map(s => `<span class="skill-badge">${s}</span>`).join('')}
+        // Headline
+        if (getFieldData('headline') !== undefined) {
+          const val = getValue(getFieldData('headline'));
+          const src = getSource(getFieldData('headline'));
+          if (val) {
+            detailsHtml += `
+              <div style="font-weight: 500; font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">
+                📢 ${val}
               </div>
             `;
           }
+        }
 
-          detailsHtml += `
-            <div class="card-detail-item">
-              <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center;">
-                <span>🛠️ Skills</span>
-                ${src ? `<span class="provenance-tag" title="Source file: ${src}">${src}</span>` : ''}
+        // Phones
+        if (getFieldData('phones') !== undefined) {
+          const val = getValue(getFieldData('phones'));
+          const src = getSource(getFieldData('phones'));
+          if (Array.isArray(val) && val.length > 0) {
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label">📞 Phones</div>
+                <div class="detail-value-wrapper">
+                  <span>${val.join(', ')}</span>
+                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
+                </div>
               </div>
-              ${skillsBadges}
+            `;
+          }
+        }
+
+        // Location
+        if (getFieldData('location') !== undefined) {
+          const val = getValue(getFieldData('location'));
+          const src = getSource(getFieldData('location'));
+          if (val) {
+            const locStr = [val.city, val.state, val.country].filter(Boolean).join(', ') || 'N/A';
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label">📍 Location</div>
+                <div class="detail-value-wrapper">
+                  <span>${locStr}</span>
+                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        // Experience Years
+        if (getFieldData('years_experience') !== undefined) {
+          const val = getValue(getFieldData('years_experience'));
+          const src = getSource(getFieldData('years_experience'));
+          if (val !== null) {
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label">⏳ Total Professional Experience</div>
+                <div class="detail-value-wrapper">
+                  <span style="font-weight:600; color:var(--accent-orange);">${val} Years</span>
+                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        // Links List
+        if (getFieldData('links') !== undefined) {
+          const val = getValue(getFieldData('links'));
+          const src = getSource(getFieldData('links'));
+          if (Array.isArray(val) && val.length > 0) {
+            const linksListHtml = val.map(l => `
+              <a href="${l.url}" target="_blank" class="skill-badge" style="text-decoration:none; color:var(--primary); font-weight:500;">
+                🌐 ${l.platform}: ${l.url.replace(/^https?:\/\/(www\.)?/, '')}
+              </a>
+            `).join(' ');
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label" style="display:flex; justify-content:space-between;">
+                  <span>🔗 Links & Socials</span>
+                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
+                </div>
+                <div class="skills-badges-list">${linksListHtml}</div>
+              </div>
+            `;
+          }
+        }
+
+        // Skills Badges
+        if (getFieldData('skills') !== undefined) {
+          const val = getValue(getFieldData('skills'));
+          const src = getSource(getFieldData('skills'));
+          if (Array.isArray(val) && val.length > 0) {
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>🛠️ Core Skills</span>
+                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
+                </div>
+                <div class="skills-badges-list">
+                  ${val.map(s => `<span class="skill-badge">${s}</span>`).join('')}
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        // Career history (collapsible timeline)
+        if (getFieldData('experience') !== undefined) {
+          const val = getValue(getFieldData('experience'));
+          const src = getSource(getFieldData('experience'));
+          if (Array.isArray(val) && val.length > 0) {
+            const listHtml = val.map(j => `
+              <div style="border-left: 2px solid var(--primary); padding-left: 10px; margin-bottom: 8px;">
+                <div style="font-weight:600; font-size:12px; color:var(--text-main);">${j.job_title || 'Software Engineer'}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${j.company || 'Unknown Company'} ${j.start_date || j.end_date ? `(${j.start_date || 'N/A'} - ${j.end_date || 'Present'})` : ''}</div>
+                ${j.description ? `<div style="font-size:10px; color:var(--text-dark); margin-top:2px;">${j.description}</div>` : ''}
+              </div>
+            `).join('');
+
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardSection(this)">
+                  <span>💼 Work History (${val.length})</span>
+                  <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="collapsible-section" style="display:none;">${listHtml}</div>
+              </div>
+            `;
+          }
+        }
+
+        // Education details (collapsible timeline)
+        if (getFieldData('education') !== undefined) {
+          const val = getValue(getFieldData('education'));
+          const src = getSource(getFieldData('education'));
+          if (Array.isArray(val) && val.length > 0) {
+            const listHtml = val.map(e => `
+              <div style="border-left: 2px solid var(--accent-green); padding-left: 10px; margin-bottom: 8px;">
+                <div style="font-weight:600; font-size:12px; color:var(--text-main);">${e.degree || 'Degree'} ${e.major ? `in ${e.major}` : ''}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${e.institution || 'Institution'} ${e.graduation_year ? `(Class of ${e.graduation_year})` : ''}</div>
+              </div>
+            `).join('');
+
+            detailsHtml += `
+              <div class="card-detail-item">
+                <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardSection(this)">
+                  <span>🎓 Education Timeline (${val.length})</span>
+                  <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="collapsible-section" style="display:none;">${listHtml}</div>
+              </div>
+            `;
+          }
+        }
+
+        // Provenance log
+        const provKey = getRemappedKey('provenance');
+        const provenanceVal = cand[provKey] !== undefined ? cand[provKey] : cand.provenance;
+        if (provenanceVal && provenanceVal.length > 0) {
+          detailsHtml += `
+            <div style="margin-top:4px; padding-top:8px; border-top: 1px solid rgba(255,255,255,0.03); display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
+              <span style="font-size:9px; font-weight:700; color:var(--text-dark); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">Sources:</span>
+              ${provenanceVal.map(p => {
+                let badgeClass = p.toLowerCase().includes('csv') ? 'badge-csv' : (p.toLowerCase().includes('json') ? 'badge-json' : 'badge-notes');
+                return `<span class="badge ${badgeClass}" style="font-size:8px;">${p}</span>`;
+              }).join(' ')}
             </div>
           `;
         }
@@ -1420,16 +1970,28 @@
       });
     }
 
+    function toggleCardSection(el) {
+      const sect = el.nextElementSibling;
+      const arrow = el.querySelector('.toggle-arrow');
+      if (sect.style.display === 'none' || !sect.style.display) {
+        sect.style.display = 'block';
+        arrow.textContent = '▲';
+        arrow.style.color = 'var(--primary)';
+      } else {
+        sect.style.display = 'none';
+        arrow.textContent = '▼';
+        arrow.style.color = 'var(--text-dark)';
+      }
+    }
+
     function renderRawJSON() {
       const jsonContainer = document.getElementById('output-json');
-      // format filteredData
       jsonContainer.textContent = JSON.stringify(filteredData, null, 2);
     }
 
-    // Export utilities
     function exportData(format) {
       if (consolidatedData.length === 0) {
-        showToast('error', 'Export Error: No data consolidated yet. Click the button to merge your sources.');
+        showToast('error', 'Export Error: No consolidated data found.');
         return;
       }
 
@@ -1437,25 +1999,22 @@
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(consolidatedData, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "consolidated_candidates.json");
+        downloadAnchor.setAttribute("download", "master_candidates.json");
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        showToast('success', 'Successfully downloaded consolidated_candidates.json');
+        showToast('success', 'Exported master_candidates.json');
       } else if (format === 'csv') {
-        // Convert to Excel compatible CSV
-        const configFields = ['name', 'email', 'phone', 'location', 'skills'];
+        const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
         const includeProvenance = document.getElementById('include-provenance').checked;
         
         let headers = [...configFields];
-        if (includeProvenance) {
-          // Append confidence column
-          headers.push('overall_confidence');
-        }
+        if (includeProvenance) headers.push('overall_confidence');
+        headers.push('provenance');
 
-        // Filter headers to only those present in output
+        // Filter headers to only those present
         headers = headers.filter(h => {
-          if (h === 'overall_confidence') return true;
+          if (h === 'overall_confidence' || h === 'provenance') return true;
           return consolidatedData.some(row => row[h] !== undefined);
         });
 
@@ -1466,18 +2025,28 @@
             if (header === 'overall_confidence') {
               return cand.overall_confidence !== undefined ? cand.overall_confidence : '';
             }
+            if (header === 'provenance') {
+              return cand.provenance ? `"${cand.provenance.join('; ')}"` : '';
+            }
 
             const cell = cand[header];
             if (cell === undefined || cell === null) return '';
             
             let val = (typeof cell === 'object' && 'value' in cell) ? cell.value : cell;
-            if (val === null) return '';
+            if (val === null || val === undefined) return '';
             
-            if (Array.isArray(val)) {
-              val = val.join('; '); // Semicolon separate list items in CSV column
+            if (header === 'location' && typeof val === 'object') {
+              val = [val.city, val.state, val.country].filter(Boolean).join(', ');
+            } else if (header === 'links' && Array.isArray(val)) {
+              val = val.map(l => l.url).join('; ');
+            } else if (header === 'experience' && Array.isArray(val)) {
+              val = val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
+            } else if (header === 'education' && Array.isArray(val)) {
+              val = val.map(e => `${e.degree} @ ${e.institution}`).join('; ');
+            } else if (Array.isArray(val)) {
+              val = val.join('; ');
             }
 
-            // Escape quotes
             const escaped = ('' + val).replace(/"/g, '""');
             return `"${escaped}"`;
           });
@@ -1487,22 +2056,147 @@
         const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join('\n'));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", csvContent);
-        downloadAnchor.setAttribute("download", "consolidated_candidates.csv");
+        downloadAnchor.setAttribute("download", "master_candidates.csv");
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        showToast('success', 'Successfully downloaded consolidated_candidates.csv');
+        showToast('success', 'Exported master_candidates.csv');
       }
     }
 
-    // Helper functions
+    function changeTheme(themeName) {
+      document.body.className = '';
+      if (themeName !== 'slate') {
+        document.body.classList.add(`theme-${themeName}`);
+      }
+      localStorage.setItem('candidate-transformer-theme', themeName);
+      showToast('info', `Changed theme to ${themeName}`);
+    }
+
+    function loadDemoData() {
+      switchInputMode('paste');
+      
+      document.getElementById('csv-text-area').value = 
+`name,email,phone,location,years_experience,skills
+Mr. Amit Sharma,amit.sharma@example.com,+919876543210,"Bangalore, India",5,["Python", "Kubernetes"]
+Dr. Jane Doe,jane.doe@example.com,+1-555-0199,"San Francisco, CA",8,["Agile", "Roadmap"]`;
+
+      document.getElementById('json-text-area').value = 
+`[
+  {
+    "full_name": "Amit Sharma",
+    "emails": ["amit.sharma@example.com", "amit.sharma@gmail.com"],
+    "phones": ["9876543210"],
+    "links": [{"platform": "GitHub", "url": "https://github.com/amitsharma"}],
+    "headline": "Senior Software Architect",
+    "skills": ["Go", "Kubernetes"],
+    "experience": [{"job_title": "Tech Lead", "company": "Cloud Corp", "start_date": "2022", "end_date": "Present"}],
+    "education": [{"degree": "B.Tech", "major": "Computer Science", "institution": "IIT Bombay", "graduation_year": "2019"}]
+  }
+]`;
+
+      document.getElementById('notes-text-area').value = 
+`Candidate Name: Amit Sharma
+Email contact: amit.sharma@gmail.com
+Phone: +91-98765-43210
+Location: Bengaluru, Karnataka, India
+headline: Staff Engineer
+Skills include System Design, Kubernetes, Python, and C++
+Job: Senior Developer at Microsoft (2019 - 2022)
+Education: MS in Computer Science from Stanford (graduated 2021)
+
+Candidate Name: Jane Doe
+Email contact: jane.doe@example.com
+Phone number mentioned is 555-0199.
+Location: San Francisco, California, USA
+Headline: Lead Product Manager
+Skills: Product Strategy, Roadmap, User Research
+Job: Product Lead at Google (2020 - Present)
+Education: MBA in Management from Harvard University (Class of 2017)
+`;
+
+      document.getElementById('github-url-input').value = 'https://github.com/amitsharma';
+      document.getElementById('linkedin-url-input').value = 'https://linkedin.com/in/jane-doe';
+
+      showToast('success', 'Loaded multi-source overlapping candidate profile streams!');
+      executeTransformation();
+    }
+
+    function loadConfigFile() {
+      const fileInput = document.getElementById('config-file-input');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const configJson = JSON.parse(e.target.result);
+          const projection = configJson.projection || configJson;
+
+          const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
+          configFields.forEach(f => {
+            const chk = document.getElementById(`field-${f}`);
+            if (chk) chk.checked = false;
+            const renameInput = document.getElementById(`rename-${f}`);
+            if (renameInput) renameInput.value = f;
+          });
+
+          if (Array.isArray(projection.fields)) {
+            projection.fields.forEach(f => {
+              const chk = document.getElementById(`field-${f}`);
+              if (chk) chk.checked = true;
+            });
+          }
+
+          if (projection.rename && typeof projection.rename === 'object') {
+            Object.keys(projection.rename).forEach(f => {
+              const renameInput = document.getElementById(`rename-${f}`);
+              if (renameInput) {
+                renameInput.value = projection.rename[f];
+              }
+            });
+          }
+
+          if (projection.normalizations && typeof projection.normalizations === 'object') {
+            if (projection.normalizations.phones) {
+              document.getElementById('norm-phones').value = projection.normalizations.phones;
+            }
+            if (projection.normalizations.skills) {
+              document.getElementById('norm-skills').value = projection.normalizations.skills;
+            }
+          }
+
+          if (projection.phone_normalization) {
+            document.getElementById('phone-normalization').value = projection.phone_normalization;
+            document.getElementById('norm-phones').value = projection.phone_normalization;
+          }
+          if (projection.skills_normalization) {
+            document.getElementById('skills-normalization').value = projection.skills_normalization;
+            document.getElementById('norm-skills').value = projection.skills_normalization;
+          }
+          if (projection.on_missing) {
+            document.getElementById('on-missing').value = projection.on_missing;
+          }
+          if (projection.include_provenance !== undefined) {
+            document.getElementById('include-provenance').checked = !!projection.include_provenance;
+          }
+
+          showToast('success', 'Runtime configuration JSON imported successfully!');
+          fileInput.value = '';
+          executeTransformation();
+        } catch (err) {
+          showToast('error', 'Failed to parse configuration JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
     function updateStatus(text, state) {
       document.getElementById('status-text').textContent = text;
       const dot = document.getElementById('status-dot');
-      dot.className = 'status-dot'; // reset
+      dot.className = 'status-dot';
       if (state === 'active') dot.classList.add('active');
       else if (state === 'error') dot.classList.add('error');
-      // 'pending' state leaves dot gray/amber defaults
     }
 
     function showToast(type, message) {
@@ -1510,7 +2204,7 @@
       const toastIcon = document.getElementById('toast-icon');
       const toastMsg = document.getElementById('toast-message');
 
-      toast.className = 'toast'; // reset
+      toast.className = 'toast';
       toast.classList.add(type);
       
       let icon = 'ℹ️';
@@ -1526,6 +2220,15 @@
         toast.classList.remove('show');
       }, 4000);
     }
+
+    // Load saved preferences on mount
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('candidate-transformer-theme') || 'slate';
+      if (savedTheme !== 'slate') {
+        document.body.classList.add(`theme-${savedTheme}`);
+      }
+      document.getElementById('theme-selector').value = savedTheme;
+    });
   </script>
 </body>
 </html>

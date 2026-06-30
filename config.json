@@ -1,8 +1,23 @@
 {
   "projection": {
-    "fields": ["name", "email", "phone", "location", "skills"],
-    "phone_normalization": "E164",
-    "skills_normalization": "lowercase",
+    "fields": [
+      "candidate_id",
+      "full_name",
+      "emails",
+      "phones",
+      "location",
+      "links",
+      "headline",
+      "years_experience",
+      "skills",
+      "experience",
+      "education"
+    ],
+    "rename": {},
+    "normalizations": {
+      "phones": "E164",
+      "skills": "lowercase"
+    },
     "include_provenance": true,
     "on_missing": "null"
   }
