@@ -1,0 +1,11 @@
+Candidate Name:
+Email:
+Phone:
+Location:
+Skills:
+
+Candidate Name: John Doe
+Email:
+Phone:
+Location: SF
+Skills: Python

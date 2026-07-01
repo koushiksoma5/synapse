@@ -1,0 +1,7 @@
+Candidate Name: ms. jane martinez
+Email: jane.martinez@example.com
+Phone: +1 555 019 9283
+Location is Austin, TX
+Skills include Python, SQL, and Java
+Job: Senior Developer at Tech Corp (2021 - Present)
+Education: BS in Computer Science from UT Austin (graduated 2020)

@@ -247,7 +247,7 @@ class SourceReader:
                 except:
                     pass
             if not phones:
-                phones = [p.strip() for p in re.split(r'[,;|\s]+', raw_phone) if p.strip()]
+                phones = [p.strip() for p in re.split(r'[,;|]+', raw_phone) if p.strip()]
                 
         # Location
         raw_loc = norm_row.get("location") or ""
@@ -700,30 +700,49 @@ class ConflictResolver:
         # Singular & list metadata resolutions
         meta_target = target["_field_metadata"]
         meta_other = other.get("_field_metadata", {})
+        default_source = other.get("provenance_source", "Unknown")
+        default_conf = other.get("confidence_score", 0.5)
         
         fields_to_resolve = ["candidate_id", "full_name", "location", "headline", "years_experience", "emails", "phones", "skills", "links", "experience", "education"]
         for field in fields_to_resolve:
             target_val = target.get(field)
             other_val = other.get(field)
             
-            # If target has nothing, adopt other
-            if target_val is None or target_val == "" or (isinstance(target_val, list) and not target_val):
+            # Helper to check if a value is empty or has only empty dictionary values
+            is_empty_target = (target_val is None or 
+                               target_val == "" or 
+                               (isinstance(target_val, list) and not target_val) or
+                               (isinstance(target_val, dict) and not any(target_val.values())))
+                               
+            is_empty_other = (other_val is None or 
+                              other_val == "" or 
+                              (isinstance(other_val, list) and not other_val) or
+                              (isinstance(other_val, dict) and not any(other_val.values())))
+            
+            if is_empty_target:
                 target[field] = other_val
                 if field in meta_other:
                     meta_target[field] = meta_other[field]
-            elif other_val is not None and other_val != "" and (not isinstance(other_val, list) or other_val):
-                target_conf = meta_target.get(field, ("", 0.0))[1]
-                other_conf = meta_other.get(field, ("", 0.0))[1]
+                else:
+                    meta_target[field] = (default_source, default_conf)
+            elif not is_empty_other:
+                target_src, target_conf = meta_target.get(field, (default_source, default_conf))
+                
+                other_meta_val = meta_other.get(field)
+                if other_meta_val is not None:
+                    other_src, other_conf = other_meta_val
+                else:
+                    other_src, other_conf = default_source, default_conf
                 
                 if other_conf > target_conf:
                     if not isinstance(target_val, list):
                         target[field] = other_val
-                    meta_target[field] = meta_other.get(field, ("", other_conf))
+                    meta_target[field] = (other_src, other_conf)
                 elif other_conf == target_conf:
-                    # Tie-breaker for strings: length wins
+                    # Tie-breaker for strings/dicts: length of string representation wins
                     if not isinstance(target_val, list) and len(str(other_val)) > len(str(target_val)):
                         target[field] = other_val
-                        meta_target[field] = meta_other.get(field, ("", other_conf))
+                        meta_target[field] = (other_src, other_conf)
 
     @staticmethod
     def deduplicate(raw_records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -826,7 +845,7 @@ def normalize_skills(skills: List[str], casing: str) -> List[str]:
         return [s.title() for s in skills]
     return skills
 
-def run_pipeline(csv_files: List[Dict[str, str]], txt_files: List[Dict[str, str]], json_files: List[Dict[str, str]], csv_text: str, notes_text: str, json_text: str, url_text: str, github_url: str, linkedin_url: str, config: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+def run_pipeline(csv_files: List[Dict[str, str]], txt_files: List[Dict[str, str]], json_files: List[Dict[str, str]], csv_text: str, notes_text: str, json_text: str, url_text: str, config: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
     raw_records = []
     
     # 1. Ingest CSV Files
@@ -862,14 +881,6 @@ def run_pipeline(csv_files: List[Dict[str, str]], txt_files: List[Dict[str, str]
     # 6b. Ingest URL Paste Text
     if url_text.strip():
         raw_records.extend(SourceReader.read_url_content(url_text, "Pasted URLs"))
-        
-    # 6c. Ingest GitHub URL
-    if github_url.strip():
-        raw_records.extend(SourceReader.read_url_content(github_url, "GitHub URL Ingest"))
-        
-    # 6d. Ingest LinkedIn URL
-    if linkedin_url.strip():
-        raw_records.extend(SourceReader.read_url_content(linkedin_url, "LinkedIn URL Ingest"))
         
     # 7. Run Match and Merge Deduplication
     consolidated = ConflictResolver.deduplicate(raw_records)
@@ -1013,12 +1024,10 @@ class TransformerHTTPHandler(http.server.BaseHTTPRequestHandler):
                 notes_text = payload.get('notes_text', '')
                 json_text = payload.get('json_text', '')
                 url_text = payload.get('url_text', '')
-                github_url = payload.get('github_url', '')
-                linkedin_url = payload.get('linkedin_url', '')
                 config = payload.get('config', {})
                 
                 has_structured = len(csv_files) > 0 or len(csv_text.strip()) > 0 or len(json_files) > 0 or len(json_text.strip()) > 0
-                has_unstructured = len(txt_files) > 0 or len(notes_text.strip()) > 0 or len(url_text.strip()) > 0 or len(github_url.strip()) > 0 or len(linkedin_url.strip()) > 0
+                has_unstructured = len(txt_files) > 0 or len(notes_text.strip()) > 0 or len(url_text.strip()) > 0
                 
                 if not has_structured and not has_unstructured:
                     self.send_response(400)
@@ -1035,8 +1044,6 @@ class TransformerHTTPHandler(http.server.BaseHTTPRequestHandler):
                     notes_text=notes_text,
                     json_text=json_text,
                     url_text=url_text,
-                    github_url=github_url,
-                    linkedin_url=linkedin_url,
                     config=config
                 )
                 

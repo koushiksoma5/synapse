@@ -1,0 +1,10 @@
+[
+  {
+    "full_name": "Bob Johnson",
+    "emails": ["bob.johnson@example.com"],
+    "phones": ["+15559876543"],
+    "location": "NY",
+    "years_experience": 5,
+    "skills": ["Python", "AWS"]
+  }
+]

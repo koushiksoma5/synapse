@@ -1,0 +1,3 @@
+name,email,phone,location,skills,link
+Bob Johnson,bob.johnson@example.com,+15559876543,Dallas,Python,
+Bob Johnson,bob.johnson@example.com,+15559876543,"Dallas, Texas, USA",Python,

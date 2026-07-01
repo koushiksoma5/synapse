@@ -1,0 +1,35 @@
+[
+  {
+    "full_name": "Alice Smith",
+    "emails": ["alice@smith.org"],
+    "confidence_score": 0.6,
+    "provenance_source": "Source_A"
+  },
+  {
+    "full_name": "Alice Smith",
+    "emails": ["alice@smith.org", "asmith@work.com"],
+    "confidence_score": 0.5,
+    "provenance_source": "Source_B"
+  },
+  {
+    "full_name": "Alice Smith",
+    "emails": ["asmith@work.com"],
+    "phones": ["+15551112222"],
+    "confidence_score": 0.7,
+    "provenance_source": "Source_C"
+  },
+  {
+    "full_name": "Alice Smith",
+    "phones": ["+15551112222"],
+    "links": [{"platform": "GitHub", "url": "https://github.com/alicesmith"}],
+    "confidence_score": 0.8,
+    "provenance_source": "Source_D"
+  },
+  {
+    "full_name": "Alice Smith",
+    "links": [{"platform": "GitHub", "url": "https://github.com/alicesmith"}],
+    "location": "Austin, TX",
+    "confidence_score": 0.9,
+    "provenance_source": "Source_E"
+  }
+]

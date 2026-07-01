@@ -1,0 +1,4 @@
+name,email,phone,location,skills,link
+John Smith,john.smith1@example.com,+15552220001,New York,React,
+John Smith,john.smith2@example.com,+15552220002,"Los Angeles",Python,
+John Smith,john.smith3@example.com,+15552220003,Chicago,Java,
