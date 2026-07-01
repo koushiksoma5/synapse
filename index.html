@@ -3,2169 +3,603 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Candidate Profile Normalization & Ingest Dashboard</title>
-  <!-- Premium clean typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-  
+  <title>Candidate Profile Consolidation Pipeline</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    /* Default Cool Quartz Light theme variables */
     :root {
-      --bg-dark: #f1f5f9;
-      --panel-bg: rgba(255, 255, 255, 0.85);
-      --panel-border: rgba(99, 102, 241, 0.15);
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg: #f8fafc;
+      --panel-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
       --accent-green: #10b981;
       --accent-orange: #f59e0b;
       --accent-red: #ef4444;
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --text-dark: #94a3b8;
-      --text-light: #0f172a;
-      --input-bg: #ffffff;
-      --card-shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
-      --font-outfit: 'Outfit', sans-serif;
-      --font-mono: 'Fira Code', monospace;
-      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--font-outfit);
-      -webkit-font-smoothing: antialiased;
-      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      background-image: var(--bg-gradient);
-    }
-
-    header {
-      padding: 16px 40px;
-      border-bottom: 1px solid var(--panel-border);
-      backdrop-filter: blur(12px);
-      background-color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-icon {
-      font-size: 26px;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    h1 {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--text-main) 30%, var(--text-muted) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .theme-selector-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .theme-selector-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-    }
-
-    select.theme-dropdown {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      color: var(--text-main);
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      outline: none;
-    }
-
-    .status-badge {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 6px 12px;
-      border-radius: 100px;
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid var(--panel-border);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--accent-orange);
-      box-shadow: 0 0 8px var(--accent-orange);
-    }
-
-    .status-dot.active {
-      background-color: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green);
-    }
-
-    .status-dot.error {
-      background-color: var(--accent-red);
-      box-shadow: 0 0 8px var(--accent-red);
-    }
-
-    .main-container {
-      flex: 1;
-      display: flex;
-      padding: 24px;
-      gap: 24px;
-      max-width: 1700px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .panel {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 18px;
-      backdrop-filter: blur(20px);
-      box-shadow: var(--card-shadow);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .left-panel {
-      width: 440px;
-      flex-shrink: 0;
-    }
-
-    .right-panel {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .panel-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--panel-border);
-      background: rgba(15, 23, 42, 0.15);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .panel-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .panel-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .tabs-header {
-      display: flex;
-      background: rgba(15, 23, 42, 0.2);
-      border-radius: 10px;
-      padding: 4px;
-      margin-bottom: 18px;
-      border: 1px solid var(--panel-border);
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      border-radius: 7px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .tab-btn.active {
-      color: var(--text-main);
-      background: rgba(15, 23, 42, 0.05);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .file-dropzone {
-      border: 2px dashed var(--panel-border);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
-      background: rgba(15, 23, 42, 0.1);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .file-dropzone:hover {
-      border-color: var(--primary);
-      background: rgba(99, 102, 241, 0.03);
-    }
-
-    .file-dropzone.has-files {
-      border-color: var(--accent-green);
-      background: rgba(16, 185, 129, 0.03);
-    }
-
-    .file-dropzone-icon {
-      font-size: 26px;
-      margin-bottom: 6px;
-      color: var(--text-muted);
-    }
-
-    .file-dropzone-text {
-      font-size: 12px;
-      color: var(--text-main);
-    }
-
-    .file-dropzone-subtext {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .selected-files-list {
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--accent-green);
-      max-height: 100px;
-      overflow-y: auto;
-    }
-
-    .selected-file-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 8px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 5px;
-      margin-bottom: 4px;
-      border-left: 2px solid var(--accent-green);
-    }
-
-    textarea {
-      width: 100%;
-      height: 90px;
-      background: rgba(15, 23, 42, 0.2);
-      border: 1px solid var(--panel-border);
-      border-radius: 10px;
-      color: var(--text-main);
-      padding: 10px;
-      font-size: 12px;
-      resize: vertical;
-      font-family: var(--font-mono);
-      outline: none;
-    }
-
-    textarea:focus {
-      border-color: var(--primary);
-    }
-
-    .settings-section-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin: 16px 0 10px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .checkbox-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      color: var(--text-muted);
-      user-select: none;
-    }
-
-    .checkbox-container input {
-      accent-color: var(--primary);
-      width: 14px;
-      height: 14px;
-      cursor: pointer;
-    }
-
-    .config-dropdown-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .dropdown-container {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    select {
-      background: var(--input-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      color: var(--text-main);
-      padding: 8px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      outline: none;
-    }
-
-    .btn {
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      border-radius: 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      border: none;
-    }
-    .btn-secondary {
-      background: var(--input-bg);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-    }
-    .btn-secondary:hover {
-      background: rgba(15, 23, 42, 0.04);
-      border-color: var(--primary);
-    }
-
-    .action-btn {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
-    }
-
-    .action-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
-    }
-
-    .search-bar-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 20px;
-      background: rgba(15, 23, 42, 0.1);
-      border-bottom: 1px solid var(--panel-border);
-    }
-
-    .search-input-wrapper {
-      position: relative;
-      flex: 1;
-    }
-
-    .search-input {
-      width: 100%;
-      background: rgba(15, 23, 42, 0.2);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 8px 12px 8px 34px;
-      font-size: 12px;
-      color: var(--text-main);
-      outline: none;
-    }
-
-    .search-input:focus {
-      border-color: var(--primary);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dark);
-      font-size: 12px;
-    }
-
-    .view-toggles {
-      display: flex;
-      background: rgba(15, 23, 42, 0.2);
-      padding: 3px;
-      border-radius: 8px;
-      border: 1px solid var(--panel-border);
-    }
-
-    .view-toggle-btn {
-      padding: 6px 12px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .view-toggle-btn.active {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .export-btns {
-      display: flex;
-      gap: 8px;
-    }
-
-    .export-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      padding: 6px 12px;
-      font-size: 11px;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .export-btn-primary {
-      background: rgba(16, 185, 129, 0.12);
-      border-color: rgba(16, 185, 129, 0.25);
-      color: var(--accent-green);
-    }
-
-    .output-content-container {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      min-height: 400px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .empty-state {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-dark);
-      text-align: center;
-      padding: 40px;
-    }
-
-    .empty-icon {
-      font-size: 44px;
-      opacity: 0.5;
-      margin-bottom: 12px;
-    }
-
-    .empty-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    .empty-desc {
-      font-size: 12px;
-      max-width: 320px;
-      line-height: 1.5;
-    }
-
-    .data-table-container {
-      width: 100%;
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid var(--panel-border);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 12px;
-    }
-
-    th {
-      background: rgba(15, 23, 42, 0.03);
-      color: var(--text-muted);
-      font-weight: 600;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--panel-border);
-      text-transform: uppercase;
-      font-size: 10px;
-      letter-spacing: 0.5px;
-    }
-
-    td {
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(15, 23, 42, 0.05);
-      color: var(--text-main);
-      max-width: 250px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    tr:hover td {
-      background: rgba(15, 23, 42, 0.02);
-    }
-
-    .cell-value {
-      line-height: 1.4;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-
-    .cell-provenance {
-      display: block;
-      font-size: 9px;
-      color: var(--text-dark);
-      margin-top: 3px;
-    }
-
-    .badge {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 500;
-      padding: 1px 5px;
-      border-radius: 3px;
-      text-transform: uppercase;
-    }
-
-    .badge-csv {
-      background: rgba(99, 102, 241, 0.08);
-      color: #4f46e5;
-      border: 1px solid rgba(99, 102, 241, 0.15);
-    }
-
-    .badge-json {
-      background: rgba(245, 158, 11, 0.08);
-      color: #b45309;
-      border: 1px solid rgba(245, 158, 11, 0.15);
-    }
-
-    .badge-notes {
-      background: rgba(16, 185, 129, 0.08);
-      color: #047857;
-      border: 1px solid rgba(16, 185, 129, 0.15);
-    }
-
-    .badge-none {
-      background: rgba(100, 116, 139, 0.08);
-      color: var(--text-muted);
-      border: 1px solid rgba(100, 116, 139, 0.15);
-    }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 20px;
-    }
-
-    .candidate-card {
-      background: rgba(255, 255, 255, 0.4);
-      border: 1px solid var(--panel-border);
-      border-radius: 16px;
-      padding: 20px;
-      position: relative;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .candidate-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--primary);
-      background: rgba(255, 255, 255, 0.75);
-      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.06);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      padding-bottom: 10px;
-    }
-
-    .card-name {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .card-email {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-      font-family: var(--font-mono);
-    }
-
-    .card-confidence {
-      text-align: right;
-    }
-
-    .confidence-percentage {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--accent-green);
-    }
-
-    .confidence-label {
-      font-size: 8px;
-      color: var(--text-dark);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .card-detail-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .detail-label {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-dark);
-      user-select: none;
-    }
-
-    .detail-value-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-    }
-
-    .provenance-tag {
-      font-size: 9px;
-      padding: 1px 4px;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.03);
-      color: var(--text-muted);
-      border: 1px solid var(--panel-border);
-      max-width: 140px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .skills-badges-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 2px;
-    }
-
-    .skill-badge {
-      font-size: 10px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--panel-border);
-      padding: 2px 7px;
-      border-radius: 5px;
-      color: var(--text-main);
-    }
-
-    .raw-json-container {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      padding: 18px;
-      flex: 1;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: #38bdf8;
-      overflow: auto;
-      white-space: pre;
-      line-height: 1.5;
-    }
-
-    .toggle-arrow {
-      font-size: 9px;
-      color: var(--text-dark);
-      transition: transform 0.2s ease;
-    }
-
-    .collapsible-section {
-      padding: 6px 0 2px 4px;
-      border-top: 1px dashed rgba(255, 255, 255, 0.04);
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-4px); }
-      100% { transform: translateY(0px); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid var(--primary);
-      border-left: 4px solid var(--primary);
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      color: #fff;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transform: translateY(150%);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 100;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-    }
-
-    .toast.success { border-color: var(--accent-green); border-left-color: var(--accent-green); }
-    .toast.error { border-color: var(--accent-red); border-left-color: var(--accent-red); }
+      --accent-blue: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; height: 100vh; display: flex; flex-direction: column; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; flex-shrink: 0; }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 22px; color: var(--primary); }
+    .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: #e2e8f0; color: var(--text-muted); }
+    .status-pill.active { background: #dcfce7; color: var(--accent-green); }
+    .status-pill.pending { background: #fef3c7; color: var(--accent-orange); }
+    .status-pill.error { background: #fee2e2; color: var(--accent-red); }
+    main { display: flex; gap: 20px; flex: 1; overflow: hidden; }
+    .panel { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .left-panel { flex: 1.1; max-width: 480px; gap: 15px; overflow-y: auto; }
+    .right-panel { flex: 2; gap: 15px; }
+    /* Tabs */
+    .tabs-header { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 5px; }
+    .tab-btn { padding: 8px 12px; background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500; color: var(--text-muted); font-size: 13px; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; flex-direction: column; gap: 10px; flex: 1; }
+    .tab-content.active { display: flex; }
+    /* Dropzones */
+    .file-dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: background 0.2s; position: relative; }
+    .file-dropzone:hover { background: #f1f5f9; }
+    .file-dropzone input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .dropzone-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .dropzone-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .selected-files { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; max-height: 90px; overflow-y: auto; }
+    .selected-file-item { display: flex; justify-content: space-between; font-size: 12px; background: #f1f5f9; padding: 5px 8px; border-radius: 4px; }
+    /* Textareas */
+    textarea { width: 100%; flex: 1; min-height: 100px; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; resize: none; font-size: 12px; outline: none; }
+    textarea:focus { border-color: var(--primary); }
+    /* Accordion Settings */
+    .accordion-section { border-top: 1px solid var(--border); padding-top: 10px; }
+    .accordion-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; font-size: 13px; padding-bottom: 5px; }
+    .accordion-content { display: none; flex-direction: column; gap: 10px; padding: 8px 0; }
+    .accordion-content.active { display: flex; }
+    .config-label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+    .checkbox-container { display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; user-select: none; }
+    .field-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; font-size: 12px; }
+    .field-row input[type="text"] { width: 130px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; outline: none; }
+    .field-row input[type="text"]:focus { border-color: var(--primary); }
+    .select-input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; background: #fff; outline: none; }
+    /* Buttons */
+    .action-btn { background: var(--primary); color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s; font-size: 13px; }
+    .action-btn:hover { background: var(--primary-hover); }
+    /* Right Panel Outputs */
+    .search-bar-container { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+    .search-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 13px; }
+    .search-input:focus { border-color: var(--primary); }
+    .view-toggles { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .view-toggle-btn { padding: 8px 12px; background: #fff; border: none; border-right: 1px solid var(--border); cursor: pointer; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .view-toggle-btn:last-child { border-right: none; }
+    .view-toggle-btn.active { background: var(--primary); color: #fff; }
+    .export-btns { display: flex; gap: 5px; }
+    .export-btn { padding: 8px 12px; border: 1px solid var(--border); background: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
+    .export-btn:hover { background: #f8fafc; }
+    /* Output Content */
+    .output-content-container { flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: #fff; position: relative; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); padding: 40px; text-align: center; gap: 10px; }
+    .empty-icon { font-size: 40px; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .empty-desc { font-size: 12px; }
+    .data-table-container { width: 100%; height: 100%; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; table-layout: fixed; }
+    th { background: #f8fafc; padding: 10px; font-weight: 600; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; width: 150px; }
+    td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    tr:hover td { background: #f8fafc; }
+    .cell-value { font-weight: 500; text-overflow: ellipsis; overflow: hidden; }
+    .cell-provenance { font-size: 9px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .badge { padding: 1px 4px; border-radius: 3px; font-size: 8px; font-weight: 600; text-transform: uppercase; color: #fff; }
+    .badge-csv { background: var(--accent-orange); }
+    .badge-json { background: var(--primary); }
+    .badge-notes { background: var(--accent-green); }
+    .badge-none { background: var(--text-muted); }
+    /* Cards View */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; padding: 15px; }
+    .candidate-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .card-name { font-weight: 600; font-size: 14px; color: var(--primary); }
+    .card-email { font-size: 11px; color: var(--text-muted); }
+    .card-confidence { text-align: right; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    .confidence-percentage { font-weight: 700; font-size: 11px; color: var(--accent-green); }
+    .confidence-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; }
+    .card-detail-item { font-size: 11px; display: flex; flex-direction: column; gap: 1px; }
+    .detail-label { font-weight: 600; color: var(--text-muted); }
+    .detail-value-wrapper { display: flex; justify-content: space-between; align-items: center; }
+    .provenance-tag { font-size: 8px; background: #f1f5f9; padding: 1px 3px; border-radius: 3px; color: var(--text-muted); border: 1px solid var(--border); }
+    .card-collapsible { border-top: 1px dashed var(--border); padding-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+    .nested-list-item { font-size: 10px; background: #f8fafc; padding: 3px 5px; border-radius: 4px; margin-bottom: 2px; }
+    .raw-json-container { padding: 15px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; height: 100%; overflow: auto; background: #0f172a; color: #38bdf8; }
+    /* Toast */
+    .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: 6px; color: #fff; font-weight: 500; font-size: 12px; display: none; gap: 6px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; }
+    .toast.success { background: var(--accent-green); }
+    .toast.error { background: var(--accent-red); }
+    .toast.info { background: var(--primary); }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="logo-container">
-      <span class="logo-icon">🚀</span>
-      <div>
-        <h1>Recruitment Normalization Engine</h1>
-        <p style="font-size: 10px; color: var(--text-dark); font-weight: 500;">Multi-Source Candidate Profile Transitive Deduplicator</p>
-      </div>
-    </div>
-    
-    <div class="header-actions">
-
-      
-      <div class="status-badge">
-        <div id="status-dot" class="status-dot"></div>
-        <span id="status-text">Ready</span>
-      </div>
-    </div>
+    <h1>Candidate Profile Consolidation Pipeline</h1>
+    <div id="pipeline-status" class="status-pill">Ready</div>
   </header>
 
-  <main class="main-container">
-    
-    <!-- LEFT: Ingestion Configurations Layer -->
+  <main>
+    <!-- LEFT: Input & Configurations Panel -->
     <section class="panel left-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">📥 Data Ingestion Layer</h2>
-      </div>
       
-      <div class="panel-body">
-        <div class="tabs-header">
-          <button type="button" class="tab-btn active" onclick="switchInputMode('files')">Select Files</button>
-          <button type="button" class="tab-btn" onclick="switchInputMode('paste')">Paste Raw Text</button>
+      <!-- Ingest tabs -->
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchInputMode('files')">📁 Upload Files</button>
+        <button class="tab-btn" onclick="switchInputMode('paste')">✍️ Paste Raw Data</button>
+      </div>
+
+      <!-- Tab: Files Ingestion -->
+      <div id="input-mode-files" class="tab-content active">
+        <div class="file-dropzone">
+          <input type="file" id="csv-file-input" accept=".csv,.json" multiple onchange="handleFileSelection('csv')">
+          <div class="dropzone-title">Add Structured Data (CSV, JSON)</div>
+          <div class="dropzone-desc">Drag & drop or click to browse</div>
         </div>
+        <div id="csv-files-list" class="selected-files"></div>
 
-        <!-- TAB 1: File selectors -->
-        <div id="input-mode-files" class="tab-content active">
-          <div class="form-group">
-            <span class="form-label">Structured Data (CSV & JSON)</span>
-            <div class="file-dropzone" onclick="document.getElementById('csv-file-input').click()">
-              <div class="file-dropzone-icon">📊</div>
-              <p class="file-dropzone-text">Click to choose CSV or JSON files</p>
-              <p class="file-dropzone-subtext">Accepts multiple files</p>
-              <input type="file" id="csv-file-input" multiple accept=".csv,.json" style="display:none" onchange="handleFileSelection('csv')">
-            </div>
-            <div id="csv-files-list" class="selected-files-list"></div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 20px;">
-            <span class="form-label">Unstructured Data (Notes & Resumes)</span>
-            <div class="file-dropzone" onclick="document.getElementById('txt-file-input').click()">
-              <div class="file-dropzone-icon">📝</div>
-              <p class="file-dropzone-text">Click to choose TXT or PDF files</p>
-              <p class="file-dropzone-subtext">Accepts text notes, text resumes, and PDF files</p>
-              <input type="file" id="txt-file-input" multiple accept=".txt,.log,.pdf" style="display:none" onchange="handleFileSelection('txt')">
-            </div>
-            <div id="txt-files-list" class="selected-files-list"></div>
-          </div>
+        <div class="file-dropzone" style="margin-top: 5px;">
+          <input type="file" id="txt-file-input" accept=".txt,.pdf" multiple onchange="handleFileSelection('txt')">
+          <div class="dropzone-title">Add Unstructured Resumes & Notes (TXT, PDF)</div>
+          <div class="dropzone-desc">Drag & drop or click to browse</div>
         </div>
+        <div id="txt-files-list" class="selected-files"></div>
+      </div>
 
-        <!-- TAB 2: Copy-Paste Text Area -->
-        <div id="input-mode-paste" class="tab-content">
-          <div class="form-group">
-            <span class="form-label">Paste CSV Content</span>
-            <textarea id="csv-text-area" placeholder="name,email,phone,location&#10;John Doe,john@example.com,+1234567890,SF"></textarea>
-          </div>
-          
-          <div class="form-group">
-            <span class="form-label">Paste JSON Content</span>
-            <textarea id="json-text-area" placeholder='[{"full_name": "John Doe", "emails": ["john@example.com"]}]'></textarea>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 20px;">
-            <span class="form-label">Paste Recruiter Notes Text</span>
-            <textarea id="notes-text-area" placeholder="Candidate Name: John Doe&#10;Email: john@example.com&#10;Skills: Python, Go&#10;Location: Austin, TX"></textarea>
-          </div>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid var(--panel-border); margin: 15px 0;">
-
-        <!-- Projection Config Controls -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div class="settings-section-title" style="margin: 0;">⚙️ Master Projection Rules</div>
-          <button class="btn btn-secondary" onclick="document.getElementById('config-file-input').click()" style="padding: 4px 10px; font-size: 12px; line-height: 1; border-radius: 4px;">📁 Load Config JSON</button>
-          <input type="file" id="config-file-input" accept=".json" style="display:none" onchange="loadConfigFile()">
-        </div>
+      <!-- Tab: Paste Data Ingestion -->
+      <div id="input-mode-paste" class="tab-content">
+        <span class="config-label">Paste CSV stream:</span>
+        <textarea id="csv-text-area" placeholder="name,email,phone,location,skills..."></textarea>
         
-        <span class="form-label">Fields to Project & Remap Target Keys</span>
-        <table class="projection-rules-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); overflow: hidden;">
-          <thead>
-            <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--panel-border);">
-              <th style="padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-dark); font-size: 11px; text-transform: uppercase;">Field</th>
-              <th style="padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-dark); font-size: 11px; text-transform: uppercase;">Norm</th>
-              <th style="padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-dark); font-size: 11px; text-transform: uppercase;">Output Key</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- ID -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-candidate_id" checked> ID
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-candidate_id" value="candidate_id" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Name -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-full_name" checked> Name
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-full_name" value="full_name" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Emails -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-emails" checked> Emails
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-emails" value="emails" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Phones -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-phones" checked> Phones
-                </label>
-              </td>
-              <td style="padding: 6px 10px;">
-                <select id="norm-phones" style="padding: 2px 4px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 11px; outline: none; width: 62px;">
-                  <option value="E164" selected>E.164</option>
-                  <option value="none">Raw</option>
-                </select>
-              </td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-phones" value="phones" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Location -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-location" checked> Location
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-location" value="location" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Links -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-links" checked> Links
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-links" value="links" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Headline -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-headline" checked> Headline
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-headline" value="headline" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Exp Years -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-years_experience" checked> Exp Years
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-years_experience" value="years_experience" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Skills -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-skills" checked> Skills
-                </label>
-              </td>
-              <td style="padding: 6px 10px;">
-                <select id="norm-skills" style="padding: 2px 4px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 11px; outline: none; width: 62px;">
-                  <option value="lowercase" selected>lower</option>
-                  <option value="uppercase">UPPER</option>
-                  <option value="titlecase">Title</option>
-                  <option value="none">Raw</option>
-                </select>
-              </td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-skills" value="skills" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Jobs -->
-            <tr style="border-bottom: 1px solid var(--panel-border);">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-experience" checked> Jobs
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-experience" value="experience" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-            <!-- Education -->
-            <tr style="border-bottom: none;">
-              <td style="padding: 8px 10px; text-align: left;">
-                <label class="checkbox-container" style="margin: 0; display: inline-flex; align-items: center;">
-                  <input type="checkbox" id="field-education" checked> Education
-                </label>
-              </td>
-              <td style="padding: 8px 10px; color: var(--text-dark); font-size: 11px; text-align: left;">—</td>
-              <td style="padding: 8px 10px;">
-                <input type="text" id="rename-education" value="education" style="width: 100%; padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-light); font-size: 12px; font-family: monospace; outline: none;">
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <span class="config-label">Paste JSON list:</span>
+        <textarea id="json-text-area" placeholder='[{"name": "John Doe", "emails": ["john@example.com"]}]'></textarea>
 
-        <div class="config-dropdown-grid">
-          <div class="dropdown-container">
-            <label class="form-label">Phone Normalization</label>
-            <select id="phone-normalization">
-              <option value="E164" selected>E.164 Strict Format</option>
-              <option value="none">None (Raw Extracted)</option>
+        <span class="config-label">Paste Recruiter Notes:</span>
+        <textarea id="notes-text-area" placeholder="Candidate Name: John Doe&#10;Email contact: john@example.com..."></textarea>
+      </div>
+
+      <!-- Accordion Section: Field Selection Configuration -->
+      <div class="accordion-section">
+        <div class="accordion-header" onclick="toggleAccordion('fields-accordion')">
+          <span>⚙️ Engine Field Projections</span>
+          <span id="fields-accordion-arrow">▼</span>
+        </div>
+        <div id="fields-accordion" class="accordion-content">
+          <div id="projection-fields-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Fields filled by script -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion Section: Normalization Configuration -->
+      <div class="accordion-section">
+        <div class="accordion-header" onclick="toggleAccordion('norm-accordion')">
+          <span>⚖️ Normalization & Conflict Policies</span>
+          <span id="norm-accordion-arrow">▼</span>
+        </div>
+        <div id="norm-accordion" class="accordion-content">
+          <div class="field-row">
+            <span class="config-label">Phone Format</span>
+            <select id="norm-phones" class="select-input">
+              <option value="E164" selected>E.164 (Standard)</option>
+              <option value="none">None (Raw Strings)</option>
             </select>
           </div>
-
-          <div class="dropdown-container" style="margin-top: 6px;">
-            <label class="form-label">Skills Case Mapping</label>
-            <select id="skills-normalization">
+          <div class="field-row">
+            <span class="config-label">Skills Case Norm</span>
+            <select id="norm-skills" class="select-input">
               <option value="lowercase" selected>lowercase</option>
               <option value="uppercase">UPPERCASE</option>
-              <option value="titlecase">Title Case</option>
-              <option value="none">None (Raw Extracted)</option>
+              <option value="titlecase">TitleCase</option>
+              <option value="none">None (Raw Casing)</option>
             </select>
           </div>
-
-          <div class="dropdown-container" style="margin-top: 6px;">
-            <label class="form-label">Missing Field Fallback Policy</label>
-            <select id="on-missing">
+          <div class="field-row">
+            <span class="config-label">Missing Field Fallback</span>
+            <select id="on-missing" class="select-input">
               <option value="null" selected>Assign Null</option>
               <option value="omit">Omit Field</option>
               <option value="error">Raise Pipeline Error</option>
             </select>
           </div>
-        </div>
-
-        <label class="checkbox-container" style="margin: 15px 0 18px 0;">
-          <input type="checkbox" id="include-provenance" checked> Include Trace logs & Provenance metadata
-        </label>
-
-        <div style="display: flex; gap: 10px;">
-          <button class="action-btn" onclick="executeTransformation()" style="flex: 2;">
-            <span>⚡ Run Consolidation Engine</span>
-          </button>
-          <button class="action-btn" onclick="loadDemoData()" style="flex: 1; background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);">
-            <span>💡 Demo</span>
-          </button>
+          <label class="checkbox-container">
+            <input type="checkbox" id="include-provenance" checked> Include Trace logs & Provenance metadata
+          </label>
         </div>
       </div>
+
+      <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border);">
+        <button class="action-btn" onclick="executeTransformation()" style="flex: 2;">⚡ Run Consolidation Engine</button>
+        <button class="action-btn" onclick="loadDemoData()" style="flex: 1; background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%);">💡 Demo</button>
+      </div>
+
     </section>
 
-    <!-- RIGHT: Dynamic Outputs Panel -->
+    <!-- RIGHT: Outputs Panel -->
     <section class="panel right-panel">
       <div class="search-bar-container">
-        <div class="search-input-wrapper">
-          <span class="search-icon">🔍</span>
-          <input type="text" class="search-input" id="search-box" placeholder="Search by name, email, skills, location..." oninput="handleSearch()">
-        </div>
+        <input type="text" class="search-input" id="search-box" placeholder="Search by name, email, skills, location..." oninput="handleSearch()">
         
         <div class="view-toggles">
           <button class="view-toggle-btn active" id="btn-view-grid" onclick="switchOutputView('grid')">Master Grid</button>
           <button class="view-toggle-btn" id="btn-view-projected" onclick="switchOutputView('projected')">Projected Table</button>
-          <button class="view-toggle-btn" id="btn-view-cards" onclick="switchOutputView('cards')">Profile Cards</button>
-          <button class="view-toggle-btn" id="btn-view-json" onclick="switchOutputView('json')">JSON Code</button>
+          <button class="view-toggle-btn" id="btn-view-cards" onclick="switchOutputView('cards')">Cards</button>
+          <button class="view-toggle-btn" id="btn-view-json" onclick="switchOutputView('json')">JSON</button>
         </div>
 
         <div class="export-btns">
-          <button class="export-btn export-btn-primary" onclick="exportData('csv')">💾 Export CSV</button>
-          <button class="export-btn" onclick="exportData('json')">📥 Export JSON</button>
+          <button class="export-btn" onclick="exportData('csv')">💾 CSV</button>
+          <button class="export-btn" onclick="exportData('json')">📥 JSON</button>
         </div>
       </div>
 
-      <!-- Result Space -->
+      <!-- Result View -->
       <div class="output-content-container">
-        <!-- State: Empty/Prompt -->
         <div id="output-empty" class="empty-state">
           <div class="empty-icon">📊</div>
           <h3 class="empty-title">Awaiting Input Stream</h3>
-          <p class="empty-desc">Upload files or paste text data in the left panel, or click "Demo" to load and run sample overlapping candidate streams.</p>
+          <p class="empty-desc">Upload files, paste text in the left panel, or click "Demo" to run overlapping candidate profiles.</p>
         </div>
 
-        <!-- State: Grid View -->
         <div id="output-grid" class="data-table-container" style="display: none;">
           <table>
-            <thead>
-              <tr id="table-headers"></tr>
-            </thead>
+            <thead><tr id="table-headers"></tr></thead>
             <tbody id="table-rows"></tbody>
           </table>
         </div>
 
-        <!-- State: Projected Grid View -->
         <div id="output-projected" class="data-table-container" style="display: none;">
           <table>
-            <thead>
-              <tr id="projected-headers"></tr>
-            </thead>
+            <thead><tr id="projected-headers"></tr></thead>
             <tbody id="projected-rows"></tbody>
           </table>
         </div>
 
-        <!-- State: Cards View -->
         <div id="output-cards" class="cards-grid" style="display: none;"></div>
-
-        <!-- State: Raw JSON View -->
         <div id="output-json" class="raw-json-container" style="display: none;"></div>
       </div>
     </section>
-
   </main>
 
-  <!-- Toast notification -->
   <div id="toast" class="toast">
-    <span id="toast-icon">ℹ️</span>
-    <span id="toast-message">Notification message here</span>
+    <span id="toast-message">Notification here</span>
   </div>
 
   <script>
-    // State Tracking
-    let inputMode = 'files';
-    let outputView = 'grid';
-    let rawCsvFiles = [];
-    let rawTxtFiles = [];
-    let rawJsonFiles = [];
-    let masterData = [];
-    let filteredMasterData = [];
-    let projectedData = [];
-    let filteredProjectedData = [];
-    let consolidatedData = [];
-    let filteredData = [];
+    const canonicalFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
+    let inputMode = 'files', outputView = 'grid', rawCsvFiles = [], rawTxtFiles = [], rawJsonFiles = [];
+    let masterData = [], filteredMasterData = [], projectedData = [], filteredProjectedData = [], filteredData = [];
 
-    // Ingest files content in-memory
-    function handleFileSelection(type) {
-      const fileInput = document.getElementById(`${type === 'csv' ? 'csv' : 'txt'}-file-input`);
-      const fileListDiv = document.getElementById(`${type === 'csv' ? 'csv' : 'txt'}-files-list`);
-      const dropzone = fileInput.closest('.file-dropzone');
-      
-      const files = Array.from(fileInput.files);
-      if (files.length === 0) return;
+    // Initialize field projections list html
+    const projContainer = document.getElementById('projection-fields-list');
+    canonicalFields.forEach(f => {
+      projContainer.innerHTML += `
+        <div class="field-row">
+          <label class="checkbox-container">
+            <input type="checkbox" id="field-${f}" checked> ${f.replace('_', ' ')}
+          </label>
+          <input type="text" id="rename-${f}" placeholder="rename key..." value="${f}">
+        </div>
+      `;
+    });
 
-      const filePromises = files.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          const isPdf = file.name.toLowerCase().endsWith('.pdf');
-          
-          reader.onload = (e) => {
-            if (isPdf) {
-              const base64Data = e.target.result.split(',')[1];
-              resolve({
-                name: file.name,
-                content: base64Data,
-                is_pdf: true
-              });
-            } else {
-              resolve({
-                name: file.name,
-                content: e.target.result,
-                is_pdf: false
-              });
-            }
-          };
-
-          if (isPdf) {
-            reader.readAsDataURL(file);
-          } else {
-            reader.readAsText(file);
-          }
-        });
-      });
-
-      Promise.all(filePromises).then(processedFiles => {
-        if (type === 'csv') {
-          processedFiles.forEach(f => {
-            if (f.name.toLowerCase().endsWith('.json')) {
-              rawJsonFiles.push(f);
-            } else {
-              rawCsvFiles.push(f);
-            }
-          });
-          
-          fileListDiv.innerHTML = '';
-          [...rawCsvFiles, ...rawJsonFiles].forEach(f => {
-            const item = document.createElement('div');
-            item.className = 'selected-file-item';
-            item.innerHTML = `<span>📄 ${f.name}</span> <span>(${(f.content.length / 1024).toFixed(1)} KB)</span>`;
-            fileListDiv.appendChild(item);
-          });
-        } else {
-          processedFiles.forEach(f => {
-            rawTxtFiles.push(f);
-          });
-          fileListDiv.innerHTML = '';
-          rawTxtFiles.forEach(f => {
-            const item = document.createElement('div');
-            item.className = 'selected-file-item';
-            const sizeLabel = f.is_pdf ? 'PDF Resume' : `${(f.content.length / 1024).toFixed(1)} KB`;
-            item.innerHTML = `<span>📄 ${f.name}</span> <span>(${sizeLabel})</span>`;
-            fileListDiv.appendChild(item);
-          });
-        }
-
-        dropzone.classList.add('has-files');
-        showToast('success', `Loaded ${processedFiles.length} file(s) successfully!`);
-      });
+    function toggleAccordion(id) {
+      const content = document.getElementById(id);
+      const arrow = document.getElementById(`${id}-arrow`);
+      const isVisible = content.classList.toggle('active');
+      arrow.textContent = isVisible ? '▲' : '▼';
     }
 
     function switchInputMode(mode) {
       inputMode = mode;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(cont => cont.classList.remove('active'));
-      
-      // Update active state
-      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(mode === 'files' ? 'files' : 'paste'));
-      if (targetBtn) targetBtn.classList.add('active');
-      document.getElementById(`input-mode-${mode}`).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.textContent.toLowerCase().includes(mode === 'files' ? 'files' : 'paste')));
+      document.querySelectorAll('.tab-content').forEach(cont => cont.classList.toggle('active', cont.id === `input-mode-${mode}`));
     }
 
     function switchOutputView(view) {
       outputView = view;
-      document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(`btn-view-${view}`);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      document.getElementById('output-empty').style.display = 'none';
-      document.getElementById('output-grid').style.display = 'none';
-      document.getElementById('output-projected').style.display = 'none';
-      document.getElementById('output-cards').style.display = 'none';
-      document.getElementById('output-json').style.display = 'none';
-
-      if (consolidatedData.length === 0) {
+      document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.toggle('active', btn.id === `btn-view-${view}`));
+      ['empty', 'grid', 'projected', 'cards', 'json'].forEach(id => {
+        document.getElementById(`output-${id}`).style.display = (id === view) ? (id === 'cards' ? 'grid' : 'block') : 'none';
+      });
+      if (masterData.length === 0) {
         document.getElementById('output-empty').style.display = 'flex';
+        ['grid', 'projected', 'cards', 'json'].forEach(id => document.getElementById(`output-${id}`).style.display = 'none');
         return;
       }
-
-      if (view === 'grid') {
-        document.getElementById('output-grid').style.display = 'block';
-        renderMasterGrid();
-      } else if (view === 'projected') {
-        document.getElementById('output-projected').style.display = 'block';
-        renderProjectedGrid();
-      } else if (view === 'cards') {
-        document.getElementById('output-cards').style.display = 'grid';
-        renderCards();
-      } else if (view === 'json') {
-        document.getElementById('output-json').style.display = 'block';
-        renderRawJSON();
-      }
+      if (view === 'grid') renderMasterGrid();
+      else if (view === 'projected') renderProjectedGrid();
+      else if (view === 'cards') renderCards();
+      else if (view === 'json') renderRawJSON();
     }
 
-    // Call Local Server API
-    async function executeTransformation() {
-      let hasStructured = false;
-      let hasUnstructured = false;
+    function handleFileSelection(type) {
+      const fileInput = document.getElementById(`${type}-file-input`);
+      const fileListDiv = document.getElementById(`${type}-files-list`);
+      const files = Array.from(fileInput.files);
+      if (files.length === 0) return;
 
-      let payload = {
-        csv_files: [],
-        txt_files: [],
-        json_files: [],
-        csv_text: '',
-        notes_text: '',
-        json_text: '',
-        config: {
-          fields: [],
-          rename: {},
-          normalizations: {
-            phones: document.getElementById('norm-phones').value,
-            skills: document.getElementById('norm-skills').value
-          },
-          phone_normalization: document.getElementById('phone-normalization').value,
-          skills_normalization: document.getElementById('skills-normalization').value,
-          on_missing: document.getElementById('on-missing').value,
-          include_provenance: document.getElementById('include-provenance').checked
-        }
-      };
-
-      const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
-      configFields.forEach(f => {
-        if (document.getElementById(`field-${f}`).checked) {
-          payload.config.fields.push(f);
-        }
-        const renameInput = document.getElementById(`rename-${f}`);
-        if (renameInput && renameInput.value.trim() && renameInput.value.trim() !== f) {
-          payload.config.rename[f] = renameInput.value.trim();
-        }
+      const promises = files.map(file => {
+        return new Promise(resolve => {
+          const reader = new FileReader();
+          const isPdf = file.name.toLowerCase().endsWith('.pdf');
+          reader.onload = e => resolve({ name: file.name, content: isPdf ? e.target.result.split(',')[1] : e.target.result, is_pdf: isPdf });
+          if (isPdf) reader.readAsDataURL(file);
+          else reader.readAsText(file);
+        });
       });
 
-      payload.csv_files = rawCsvFiles;
-      payload.txt_files = rawTxtFiles;
-      payload.json_files = rawJsonFiles;
+      Promise.all(promises).then(res => {
+        if (type === 'csv') {
+          res.forEach(f => f.name.toLowerCase().endsWith('.json') ? rawJsonFiles.push(f) : rawCsvFiles.push(f));
+        } else {
+          res.forEach(f => rawTxtFiles.push(f));
+        }
+        fileListDiv.innerHTML = '';
+        const activeList = type === 'csv' ? [...rawCsvFiles, ...rawJsonFiles] : rawTxtFiles;
+        activeList.forEach(f => {
+          fileListDiv.innerHTML += `<div class="selected-file-item"><span>📄 ${f.name}</span> <span>${f.is_pdf ? 'PDF Resume' : (f.content.length/1024).toFixed(1) + ' KB'}</span></div>`;
+        });
+        showToast('success', `Loaded ${res.length} file(s) successfully!`);
+      });
+    }
 
-      payload.csv_text = document.getElementById('csv-text-area').value.trim();
-      payload.json_text = document.getElementById('json-text-area').value.trim();
-      payload.notes_text = document.getElementById('notes-text-area').value.trim();
-      
-      hasStructured = rawCsvFiles.length > 0 || rawJsonFiles.length > 0 || payload.csv_text.length > 0 || payload.json_text.length > 0;
-      hasUnstructured = rawTxtFiles.length > 0 || payload.notes_text.length > 0;
+    async function executeTransformation() {
+      const hasStructured = rawCsvFiles.length > 0 || rawJsonFiles.length > 0 || document.getElementById('csv-text-area').value.trim() || document.getElementById('json-text-area').value.trim();
+      const hasUnstructured = rawTxtFiles.length > 0 || document.getElementById('notes-text-area').value.trim();
 
       if (!hasStructured && !hasUnstructured) {
-        showToast('error', 'Validation Error: Please select or enter at least ONE structured or unstructured data source.');
-        updateStatus('Validation Error', 'error');
+        showToast('error', 'Please select or enter input data.');
         return;
       }
 
-      updateStatus('Running engine...', 'pending');
-      showToast('info', 'Consolidating multi-source candidate profiles...');
-
+      updateStatus('Processing...', 'pending');
       try {
-        const response = await fetch('/api/transform', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        const payload = {
+          csv_files: rawCsvFiles, txt_files: rawTxtFiles, json_files: rawJsonFiles,
+          csv_text: document.getElementById('csv-text-area').value,
+          json_text: document.getElementById('json-text-area').value,
+          notes_text: document.getElementById('notes-text-area').value,
+          config: {
+            fields: [], rename: {},
+            normalizations: { phones: document.getElementById('norm-phones').value, skills: document.getElementById('norm-skills').value },
+            on_missing: document.getElementById('on-missing').value,
+            include_provenance: document.getElementById('include-provenance').checked
+          }
+        };
+
+        canonicalFields.forEach(f => {
+          if (document.getElementById(`field-${f}`).checked) payload.config.fields.push(f);
+          const renameVal = document.getElementById(`rename-${f}`).value.trim();
+          if (renameVal && renameVal !== f) payload.config.rename[f] = renameVal;
         });
 
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error || 'Server consolidation error');
-        }
+        const res = await fetch('/api/transform', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Server error');
 
         masterData = result.master_data;
-        filteredMasterData = [...masterData];
         projectedData = result.projected_data;
-        filteredProjectedData = [...projectedData];
-        
-        consolidatedData = projectedData;
-        filteredData = filteredProjectedData;
-        
-        updateStatus(`Consolidated ${masterData.length} profile(s)`, 'active');
-        showToast('success', `Pipeline succeeded: normalized ${consolidatedData.length} profile(s).`);
-        switchOutputView(outputView);
+        handleSearch();
+        updateStatus(`Consolidated ${masterData.length} records`, 'active');
+        showToast('success', `Pipeline completed successfully!`);
       } catch (err) {
-        console.error(err);
-        updateStatus('Pipeline Error', 'error');
+        updateStatus('Error', 'error');
         showToast('error', err.message);
-        consolidatedData = [];
-        filteredData = [];
-        switchOutputView(outputView);
       }
     }
 
-    function handleSearch() {
-      const query = document.getElementById('search-box').value.toLowerCase().trim();
-      const checkField = (fieldVal) => {
-        if (!fieldVal) return false;
-        let val = (typeof fieldVal === 'object' && fieldVal !== null && 'value' in fieldVal) ? fieldVal.value : fieldVal;
-        if (!val) return false;
-        if (Array.isArray(val)) {
-          return val.some(item => {
-            if (typeof item === 'object') {
-              return JSON.stringify(item).toLowerCase().includes(query);
-            }
-            return String(item).toLowerCase().includes(query);
-          });
-        }
-        if (typeof val === 'object') {
-          return JSON.stringify(val).toLowerCase().includes(query);
-        }
-        return String(val).toLowerCase().includes(query);
-      };
-
-      if (!query) {
-        filteredMasterData = [...masterData];
-        filteredProjectedData = [...projectedData];
-        filteredData = [...projectedData];
-      } else {
-        filteredMasterData = masterData.filter(cand => {
-          return checkField(cand.candidate_id) ||
-                 checkField(cand.full_name) || 
-                 checkField(cand.emails) || 
-                 checkField(cand.phones) || 
-                 checkField(cand.location) || 
-                 checkField(cand.links) ||
-                 checkField(cand.headline) ||
-                 checkField(cand.skills);
-        });
-
-        filteredProjectedData = projectedData.filter(cand => {
-          return Object.keys(cand).some(k => checkField(cand[k]));
-        });
-        
-        filteredData = filteredProjectedData;
-      }
-
-      if (outputView === 'grid') renderMasterGrid();
-      else if (outputView === 'projected') renderProjectedGrid();
-      else if (outputView === 'cards') renderCards();
-      else if (outputView === 'json') renderRawJSON();
-    }
-
-    function getRemappedKey(field) {
-      const renameInput = document.getElementById(`rename-${field}`);
-      return (renameInput && renameInput.value.trim()) ? renameInput.value.trim() : field;
+    function formatCell(val, field) {
+      if (val === null || val === undefined) return '<span style="color: var(--text-muted)">null</span>';
+      if (typeof val === 'object' && 'value' in val) val = val.value;
+      if (val === null || val === undefined) return '<span style="color: var(--text-muted)">null</span>';
+      if (Array.isArray(val) && val.length === 0) return '<span style="color: var(--text-muted)">null</span>';
+      if (field === 'location' && typeof val === 'object') return [val.city, val.state, val.country].filter(Boolean).join(', ') || '<span style="color: var(--text-muted)">null</span>';
+      if (field === 'links' && Array.isArray(val)) return val.map(l => `<a href="${l.url}" target="_blank" style="color: var(--primary); text-decoration: none;">${l.platform}</a>`).join(' | ');
+      if (field === 'experience' && Array.isArray(val)) return val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
+      if (field === 'education' && Array.isArray(val)) return val.map(e => `${e.degree} in ${e.major || 'N/A'} @ ${e.institution}`).join('; ');
+      return Array.isArray(val) ? val.join(', ') : val;
     }
 
     function renderMasterGrid() {
-      const headersTr = document.getElementById('table-headers');
-      const rowsTbody = document.getElementById('table-rows');
-      
-      headersTr.innerHTML = '';
-      rowsTbody.innerHTML = '';
-
-      if (filteredMasterData.length === 0) {
-        rowsTbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-dark); padding: 30px;">No matching records found.</td></tr>`;
-        return;
-      }
-
-      const canonicalFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
+      const headers = document.getElementById('table-headers');
+      const rows = document.getElementById('table-rows');
       const includeProvenance = document.getElementById('include-provenance').checked;
-
-      // Always render headers for ALL 11 canonical fields in the Master grid
-      canonicalFields.forEach(f => {
-        const th = document.createElement('th');
-        th.textContent = f.replace('_', ' ');
-        headersTr.appendChild(th);
-      });
       
-      if (includeProvenance) {
-        const thConf = document.createElement('th');
-        thConf.textContent = 'Confidence';
-        headersTr.appendChild(thConf);
-      }
-
-      // Render cell rows for Master records
-      filteredMasterData.forEach(cand => {
-        const tr = document.createElement('tr');
+      headers.innerHTML = canonicalFields.map(f => `<th>${f.replace('_', ' ')}</th>`).join('') + (includeProvenance ? '<th>Confidence</th>' : '');
+      rows.innerHTML = filteredMasterData.map(cand => {
+        const cells = canonicalFields.map(f => {
+          const item = cand[f];
+          const displayVal = formatCell(item, f);
+          const src = item && typeof item === 'object' && 'source' in item ? item.source : '';
+          const conf = item && typeof item === 'object' && 'confidence' in item ? item.confidence : '';
+          const provenanceHtml = src ? `
+            <div class="cell-provenance">
+              <span class="badge badge-${src.toLowerCase().includes('csv') ? 'csv' : (src.toLowerCase().includes('json') ? 'badge-json' : 'notes')}">${src}</span>
+              <span>(${Math.round(conf * 100)}%)</span>
+            </div>` : '';
+          return `<td><div class="cell-value" title="${displayVal.replace(/<[^>]*>/g, '')}">${displayVal}</div>${provenanceHtml}</td>`;
+        }).join('');
         
-        canonicalFields.forEach(f => {
-          const td = document.createElement('td');
-          const cellData = cand[f];
-          
-          if (cellData === undefined || cellData === null) {
-            td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
-          } else {
-            let val = cellData;
-            let source = null;
-            let conf = null;
-
-            if (typeof cellData === 'object' && cellData !== null && 'value' in cellData) {
-              val = cellData.value;
-              source = cellData.source;
-              conf = cellData.confidence;
-            }
-
-            if (val === null || val === undefined) {
-              td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
-            } else {
-              let displayVal = '';
-              if (f === 'location' && typeof val === 'object') {
-                displayVal = [val.city, val.state, val.country].filter(Boolean).join(', ') || 'N/A';
-              } else if (f === 'links' && Array.isArray(val)) {
-                displayVal = val.map(l => l.url).join(' | ');
-              } else if (f === 'experience' && Array.isArray(val)) {
-                displayVal = val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
-              } else if (f === 'education' && Array.isArray(val)) {
-                displayVal = val.map(e => `${e.degree} @ ${e.institution}`).join('; ');
-              } else if (Array.isArray(val)) {
-                displayVal = val.join(', ');
-              } else {
-                displayVal = val;
-              }
-
-              td.setAttribute('title', displayVal);
-              if (source) {
-                let badgeClass = source.toLowerCase().includes('csv') ? 'badge-csv' : (source.toLowerCase().includes('json') ? 'badge-json' : (source.toLowerCase().includes('none') ? 'badge-none' : 'badge-notes'));
-                td.innerHTML = `
-                  <div class="cell-value">${displayVal}</div>
-                  <div class="cell-provenance">
-                    <span class="badge ${badgeClass}">${source}</span>
-                    <span>(${Math.round(conf * 100)}%)</span>
-                  </div>
-                `;
-              } else {
-                td.innerHTML = `<div class="cell-value">${displayVal}</div>`;
-              }
-            }
-          }
-          tr.appendChild(td);
-        });
-
-        if (includeProvenance) {
-          const tdScore = document.createElement('td');
-          const score = cand.overall_confidence;
-          if (score !== undefined && score !== null) {
-            const pct = Math.round(score * 100);
-            const scoreColor = pct >= 80 ? 'var(--accent-green)' : (pct >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)');
-            tdScore.innerHTML = `<span style="font-weight: 700; color: ${scoreColor}">${pct}%</span>`;
-          } else {
-            tdScore.innerHTML = '-';
-          }
-          tr.appendChild(tdScore);
-        }
-
-        rowsTbody.appendChild(tr);
-      });
+        const confHtml = includeProvenance ? `<td><span style="font-weight: 700; color: ${cand.overall_confidence >= 0.8 ? 'var(--accent-green)' : (cand.overall_confidence >= 0.5 ? 'var(--accent-orange)' : 'var(--accent-red)')}">${Math.round(cand.overall_confidence * 100)}%</span></td>` : '';
+        return `<tr>${cells}${confHtml}</tr>`;
+      }).join('');
     }
 
     function renderProjectedGrid() {
-      const headersTr = document.getElementById('projected-headers');
-      const rowsTbody = document.getElementById('projected-rows');
-      
-      headersTr.innerHTML = '';
-      rowsTbody.innerHTML = '';
-
-      if (filteredProjectedData.length === 0) {
-        rowsTbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-dark); padding: 30px;">No matching records found.</td></tr>`;
-        return;
-      }
-
-      const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
+      const headers = document.getElementById('projected-headers');
+      const rows = document.getElementById('projected-rows');
       const includeProvenance = document.getElementById('include-provenance').checked;
-
-      // Extract only checked projection fields and their remapped names
-      const activeFields = [];
-      configFields.forEach(f => {
-        const chk = document.getElementById(`field-${f}`);
-        if (chk && chk.checked) {
-          const renameVal = document.getElementById(`rename-${f}`).value.trim() || f;
-          activeFields.push({
-            canonical: f,
-            remapped: renameVal
-          });
-        }
-      });
-
-      // Render column headers
-      activeFields.forEach(col => {
-        const th = document.createElement('th');
-        th.textContent = col.remapped.replace('_', ' ');
-        headersTr.appendChild(th);
-      });
       
-      if (includeProvenance) {
-        const thConf = document.createElement('th');
-        thConf.textContent = 'Confidence';
-        headersTr.appendChild(thConf);
-      }
-
-      // Render cell rows
-      filteredProjectedData.forEach(cand => {
-        const tr = document.createElement('tr');
-        
-        activeFields.forEach(col => {
-          const td = document.createElement('td');
-          const cellData = cand[col.remapped];
-          
-          if (cellData === undefined || cellData === null) {
-            td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
-          } else {
-            let val = cellData;
-            let source = null;
-            let conf = null;
-
-            if (typeof cellData === 'object' && cellData !== null && 'value' in cellData) {
-              val = cellData.value;
-              source = cellData.source;
-              conf = cellData.confidence;
-            }
-
-            if (val === null || val === undefined) {
-              td.innerHTML = '<span style="color: var(--text-dark)">null</span>';
-            } else {
-              let displayVal = '';
-              const f = col.canonical;
-              if (f === 'location' && typeof val === 'object') {
-                displayVal = [val.city, val.state, val.country].filter(Boolean).join(', ') || 'N/A';
-              } else if (f === 'links' && Array.isArray(val)) {
-                displayVal = val.map(l => l.url).join(' | ');
-              } else if (f === 'experience' && Array.isArray(val)) {
-                displayVal = val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
-              } else if (f === 'education' && Array.isArray(val)) {
-                displayVal = val.map(e => `${e.degree} @ ${e.institution}`).join('; ');
-              } else if (Array.isArray(val)) {
-                displayVal = val.join(', ');
-              } else {
-                displayVal = val;
-              }
-
-              td.setAttribute('title', displayVal);
-              if (source) {
-                let badgeClass = source.toLowerCase().includes('csv') ? 'badge-csv' : (source.toLowerCase().includes('json') ? 'badge-json' : (source.toLowerCase().includes('none') ? 'badge-none' : 'badge-notes'));
-                td.innerHTML = `
-                  <div class="cell-value">${displayVal}</div>
-                  <div class="cell-provenance">
-                    <span class="badge ${badgeClass}">${source}</span>
-                    <span>(${Math.round(conf * 100)}%)</span>
-                  </div>
-                `;
-              } else {
-                td.innerHTML = `<div class="cell-value">${displayVal}</div>`;
-              }
-            }
-          }
-          tr.appendChild(td);
-        });
-
-        if (includeProvenance) {
-          const tdScore = document.createElement('td');
-          const overallConfKey = getRemappedKey('overall_confidence');
-          const score = cand[overallConfKey] !== undefined ? cand[overallConfKey] : cand.overall_confidence;
-          if (score !== undefined && score !== null) {
-            const pct = Math.round(score * 100);
-            const scoreColor = pct >= 80 ? 'var(--accent-green)' : (pct >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)');
-            tdScore.innerHTML = `<span style="font-weight: 700; color: ${scoreColor}">${pct}%</span>`;
-          } else {
-            tdScore.innerHTML = '-';
-          }
-          tr.appendChild(tdScore);
+      const activeFields = [];
+      canonicalFields.forEach(f => {
+        if (document.getElementById(`field-${f}`).checked) {
+          activeFields.push({ key: document.getElementById(`rename-${f}`).value.trim() || f, original: f });
         }
-
-        rowsTbody.appendChild(tr);
       });
+
+      headers.innerHTML = activeFields.map(f => `<th>${f.key.replace('_', ' ')}</th>`).join('') + (includeProvenance && activeFields.length ? '<th>Confidence</th>' : '');
+      rows.innerHTML = filteredProjectedData.map(cand => {
+        const cells = activeFields.map(f => {
+          const item = cand[f.key];
+          const displayVal = formatCell(item, f.original);
+          const src = item && typeof item === 'object' && 'source' in item ? item.source : '';
+          const conf = item && typeof item === 'object' && 'confidence' in item ? item.confidence : '';
+          const provenanceHtml = src ? `
+            <div class="cell-provenance">
+              <span class="badge badge-${src.toLowerCase().includes('csv') ? 'csv' : (src.toLowerCase().includes('json') ? 'badge-json' : 'notes')}">${src}</span>
+              <span>(${Math.round(conf * 100)}%)</span>
+            </div>` : '';
+          return `<td><div class="cell-value" title="${displayVal.replace(/<[^>]*>/g, '')}">${displayVal}</div>${provenanceHtml}</td>`;
+        }).join('');
+        
+        const overallKey = document.getElementById('rename-overall_confidence')?.value.trim() || 'overall_confidence';
+        const overallVal = cand[overallKey] !== undefined ? cand[overallKey] : cand.overall_confidence;
+        const confHtml = (includeProvenance && activeFields.length) ? `<td><span style="font-weight: 700; color: ${overallVal >= 0.8 ? 'var(--accent-green)' : (overallVal >= 0.5 ? 'var(--accent-orange)' : 'var(--accent-red)')}">${Math.round(overallVal * 100)}%</span></td>` : '';
+        return `<tr>${cells}${confHtml}</tr>`;
+      }).join('');
     }
 
     function renderCards() {
-      const cardsGrid = document.getElementById('output-cards');
-      cardsGrid.innerHTML = '';
-
-      if (filteredData.length === 0) {
-        cardsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-dark); padding: 40px;">No matching records found.</div>`;
-        return;
-      }
-
-      filteredData.forEach(cand => {
-        const card = document.createElement('div');
-        card.className = 'candidate-card';
-
-        const getValue = (field) => {
-          if (!field) return null;
-          return (typeof field === 'object' && field !== null && 'value' in field) ? field.value : field;
+      const grid = document.getElementById('output-cards');
+      grid.innerHTML = filteredProjectedData.map(cand => {
+        const getVal = f => {
+          const key = document.getElementById(`rename-${f}`).value.trim() || f;
+          const val = cand[key];
+          return val && typeof val === 'object' && 'value' in val ? val.value : val;
+        };
+        const getSrc = f => {
+          const key = document.getElementById(`rename-${f}`).value.trim() || f;
+          return cand[key] && typeof cand[key] === 'object' && 'source' in cand[key] ? cand[key].source : '';
         };
 
-        const getSource = (field) => {
-          if (typeof field === 'object' && field !== null && 'source' in field) return field.source;
-          return null;
-        };
+        const name = getVal('full_name') || 'Anonymous';
+        const email = (getVal('emails') || []).join(', ') || 'no-email@provided.com';
+        const phone = (getVal('phones') || []).join(', ') || 'N/A';
+        const loc = getVal('location');
+        const locStr = loc ? [loc.city, loc.state, loc.country].filter(Boolean).join(', ') : 'N/A';
+        
+        const exp = getVal('experience') || [];
+        const edu = getVal('education') || [];
+        const skills = getVal('skills') || [];
 
-        const getFieldData = (canonicalField) => {
-          const remappedKey = getRemappedKey(canonicalField);
-          return cand[remappedKey];
-        };
+        const overallKey = document.getElementById('rename-overall_confidence')?.value.trim() || 'overall_confidence';
+        const overallVal = cand[overallKey] !== undefined ? cand[overallKey] : cand.overall_confidence;
 
-        const getName = () => getValue(getFieldData('full_name')) || 'Anonymous';
-        const getEmailStr = () => {
-          const arr = getValue(getFieldData('emails'));
-          return Array.isArray(arr) && arr.length > 0 ? arr.join(', ') : 'no-email@provided.com';
-        };
-
-        let confidenceHtml = '';
-        const overallConfKey = getRemappedKey('overall_confidence');
-        const overallConfVal = cand[overallConfKey] !== undefined ? cand[overallConfKey] : cand.overall_confidence;
-        if (overallConfVal !== undefined) {
-          const pct = Math.round(overallConfVal * 100);
-          confidenceHtml = `
-            <div class="card-confidence">
-              <div class="confidence-percentage">${pct}%</div>
-              <div class="confidence-label">Confidence</div>
+        return `
+          <div class="candidate-card">
+            <div class="card-header">
+              <div>
+                <div class="card-name">${name}</div>
+                <div class="card-email">${email}</div>
+              </div>
+              <div class="card-confidence">
+                <div class="confidence-percentage">${Math.round((overallVal || 0.5) * 100)}%</div>
+                <div class="confidence-label">Confidence</div>
+              </div>
             </div>
-          `;
-        }
-
-        let headerHtml = `
-          <div class="card-header">
-            <div>
-              <div class="card-name">${getName()}</div>
-              <div class="card-email">${getEmailStr()}</div>
+            <div class="card-detail-item"><span class="detail-label">📞 Phones</span><span>${phone}</span></div>
+            <div class="card-detail-item"><span class="detail-label">📍 Location</span><span>${locStr}</span></div>
+            
+            <div class="card-collapsible">
+              <div class="card-detail-item">
+                <span class="detail-label">💼 Experience</span>
+                ${exp.map(j => `<div class="nested-list-item"><strong>${j.job_title}</strong> at ${j.company} (${j.start_date} - ${j.end_date || 'Present'})</div>`).join('') || 'None'}
+              </div>
+              <div class="card-detail-item">
+                <span class="detail-label">🎓 Education</span>
+                ${edu.map(e => `<div class="nested-list-item"><strong>${e.degree}</strong> in ${e.major || 'N/A'} @ ${e.institution}</div>`).join('') || 'None'}
+              </div>
+              <div class="card-detail-item">
+                <span class="detail-label">🛠️ Skills</span>
+                <span style="font-weight: 500;">${skills.join(', ') || 'N/A'}</span>
+              </div>
             </div>
-            ${confidenceHtml}
           </div>
         `;
-
-        let detailsHtml = '';
-        
-        // Headline
-        if (getFieldData('headline') !== undefined) {
-          const val = getValue(getFieldData('headline'));
-          const src = getSource(getFieldData('headline'));
-          if (val) {
-            detailsHtml += `
-              <div style="font-weight: 500; font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">
-                📢 ${val}
-              </div>
-            `;
-          }
-        }
-
-        // Phones
-        if (getFieldData('phones') !== undefined) {
-          const val = getValue(getFieldData('phones'));
-          const src = getSource(getFieldData('phones'));
-          if (Array.isArray(val) && val.length > 0) {
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label">📞 Phones</div>
-                <div class="detail-value-wrapper">
-                  <span>${val.join(', ')}</span>
-                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
-                </div>
-              </div>
-            `;
-          }
-        }
-
-        // Location
-        if (getFieldData('location') !== undefined) {
-          const val = getValue(getFieldData('location'));
-          const src = getSource(getFieldData('location'));
-          if (val) {
-            const locStr = [val.city, val.state, val.country].filter(Boolean).join(', ') || 'N/A';
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label">📍 Location</div>
-                <div class="detail-value-wrapper">
-                  <span>${locStr}</span>
-                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
-                </div>
-              </div>
-            `;
-          }
-        }
-
-        // Experience Years
-        if (getFieldData('years_experience') !== undefined) {
-          const val = getValue(getFieldData('years_experience'));
-          const src = getSource(getFieldData('years_experience'));
-          if (val !== null) {
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label">⏳ Total Professional Experience</div>
-                <div class="detail-value-wrapper">
-                  <span style="font-weight:600; color:var(--accent-orange);">${val} Years</span>
-                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
-                </div>
-              </div>
-            `;
-          }
-        }
-
-        // Links List
-        if (getFieldData('links') !== undefined) {
-          const val = getValue(getFieldData('links'));
-          const src = getSource(getFieldData('links'));
-          if (Array.isArray(val) && val.length > 0) {
-            const linksListHtml = val.map(l => `
-              <a href="${l.url}" target="_blank" class="skill-badge" style="text-decoration:none; color:var(--primary); font-weight:500;">
-                🌐 ${l.platform}: ${l.url.replace(/^https?:\/\/(www\.)?/, '')}
-              </a>
-            `).join(' ');
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label" style="display:flex; justify-content:space-between;">
-                  <span>🔗 Links & Socials</span>
-                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
-                </div>
-                <div class="skills-badges-list">${linksListHtml}</div>
-              </div>
-            `;
-          }
-        }
-
-        // Skills Badges
-        if (getFieldData('skills') !== undefined) {
-          const val = getValue(getFieldData('skills'));
-          const src = getSource(getFieldData('skills'));
-          if (Array.isArray(val) && val.length > 0) {
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center;">
-                  <span>🛠️ Core Skills</span>
-                  ${src ? `<span class="provenance-tag" title="Source: ${src}">${src}</span>` : ''}
-                </div>
-                <div class="skills-badges-list">
-                  ${val.map(s => `<span class="skill-badge">${s}</span>`).join('')}
-                </div>
-              </div>
-            `;
-          }
-        }
-
-        // Career history (collapsible timeline)
-        if (getFieldData('experience') !== undefined) {
-          const val = getValue(getFieldData('experience'));
-          const src = getSource(getFieldData('experience'));
-          if (Array.isArray(val) && val.length > 0) {
-            const listHtml = val.map(j => `
-              <div style="border-left: 2px solid var(--primary); padding-left: 10px; margin-bottom: 8px;">
-                <div style="font-weight:600; font-size:12px; color:var(--text-main);">${j.job_title || 'Software Engineer'}</div>
-                <div style="font-size:11px; color:var(--text-muted);">${j.company || 'Unknown Company'} ${j.start_date || j.end_date ? `(${j.start_date || 'N/A'} - ${j.end_date || 'Present'})` : ''}</div>
-                ${j.description ? `<div style="font-size:10px; color:var(--text-dark); margin-top:2px;">${j.description}</div>` : ''}
-              </div>
-            `).join('');
-
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardSection(this)">
-                  <span>💼 Work History (${val.length})</span>
-                  <span class="toggle-arrow">▼</span>
-                </div>
-                <div class="collapsible-section" style="display:none;">${listHtml}</div>
-              </div>
-            `;
-          }
-        }
-
-        // Education details (collapsible timeline)
-        if (getFieldData('education') !== undefined) {
-          const val = getValue(getFieldData('education'));
-          const src = getSource(getFieldData('education'));
-          if (Array.isArray(val) && val.length > 0) {
-            const listHtml = val.map(e => `
-              <div style="border-left: 2px solid var(--accent-green); padding-left: 10px; margin-bottom: 8px;">
-                <div style="font-weight:600; font-size:12px; color:var(--text-main);">${e.degree || 'Degree'} ${e.major ? `in ${e.major}` : ''}</div>
-                <div style="font-size:11px; color:var(--text-muted);">${e.institution || 'Institution'} ${e.graduation_year ? `(Class of ${e.graduation_year})` : ''}</div>
-              </div>
-            `).join('');
-
-            detailsHtml += `
-              <div class="card-detail-item">
-                <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardSection(this)">
-                  <span>🎓 Education Timeline (${val.length})</span>
-                  <span class="toggle-arrow">▼</span>
-                </div>
-                <div class="collapsible-section" style="display:none;">${listHtml}</div>
-              </div>
-            `;
-          }
-        }
-
-        // Provenance log
-        const provKey = getRemappedKey('provenance');
-        const provenanceVal = cand[provKey] !== undefined ? cand[provKey] : cand.provenance;
-        if (provenanceVal && provenanceVal.length > 0) {
-          detailsHtml += `
-            <div style="margin-top:4px; padding-top:8px; border-top: 1px solid rgba(255,255,255,0.03); display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
-              <span style="font-size:9px; font-weight:700; color:var(--text-dark); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">Sources:</span>
-              ${provenanceVal.map(p => {
-                let badgeClass = p.toLowerCase().includes('csv') ? 'badge-csv' : (p.toLowerCase().includes('json') ? 'badge-json' : 'badge-notes');
-                return `<span class="badge ${badgeClass}" style="font-size:8px;">${p}</span>`;
-              }).join(' ')}
-            </div>
-          `;
-        }
-
-        card.innerHTML = headerHtml + detailsHtml;
-        cardsGrid.appendChild(card);
-      });
-    }
-
-    function toggleCardSection(el) {
-      const sect = el.nextElementSibling;
-      const arrow = el.querySelector('.toggle-arrow');
-      if (sect.style.display === 'none' || !sect.style.display) {
-        sect.style.display = 'block';
-        arrow.textContent = '▲';
-        arrow.style.color = 'var(--primary)';
-      } else {
-        sect.style.display = 'none';
-        arrow.textContent = '▼';
-        arrow.style.color = 'var(--text-dark)';
-      }
+      }).join('');
     }
 
     function renderRawJSON() {
-      const jsonContainer = document.getElementById('output-json');
-      jsonContainer.textContent = JSON.stringify(filteredData, null, 2);
+      document.getElementById('output-json').innerHTML = JSON.stringify(filteredProjectedData, null, 2);
     }
 
-    function exportData(format) {
-      if (consolidatedData.length === 0) {
-        showToast('error', 'Export Error: No consolidated data found.');
-        return;
+    function handleSearch() {
+      const q = document.getElementById('search-box').value.toLowerCase().trim();
+      const match = val => {
+        if (!val) return false;
+        const v = val && typeof val === 'object' && 'value' in val ? val.value : val;
+        return JSON.stringify(v).toLowerCase().includes(q);
+      };
+
+      if (!q) {
+        filteredMasterData = [...masterData];
+        filteredProjectedData = [...projectedData];
+      } else {
+        filteredMasterData = masterData.filter(cand => canonicalFields.some(f => match(cand[f])));
+        filteredProjectedData = projectedData.filter(cand => Object.keys(cand).some(k => match(cand[k])));
       }
-
-      if (format === 'json') {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(consolidatedData, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "master_candidates.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        showToast('success', 'Exported master_candidates.json');
-      } else if (format === 'csv') {
-        const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
-        const includeProvenance = document.getElementById('include-provenance').checked;
-        
-        let headers = [...configFields];
-        if (includeProvenance) headers.push('overall_confidence');
-        headers.push('provenance');
-
-        // Filter headers to only those present
-        headers = headers.filter(h => {
-          if (h === 'overall_confidence' || h === 'provenance') return true;
-          return consolidatedData.some(row => row[h] !== undefined);
-        });
-
-        let csvRows = [headers.join(',')];
-
-        consolidatedData.forEach(cand => {
-          const values = headers.map(header => {
-            if (header === 'overall_confidence') {
-              return cand.overall_confidence !== undefined ? cand.overall_confidence : '';
-            }
-            if (header === 'provenance') {
-              return cand.provenance ? `"${cand.provenance.join('; ')}"` : '';
-            }
-
-            const cell = cand[header];
-            if (cell === undefined || cell === null) return '';
-            
-            let val = (typeof cell === 'object' && 'value' in cell) ? cell.value : cell;
-            if (val === null || val === undefined) return '';
-            
-            if (header === 'location' && typeof val === 'object') {
-              val = [val.city, val.state, val.country].filter(Boolean).join(', ');
-            } else if (header === 'links' && Array.isArray(val)) {
-              val = val.map(l => l.url).join('; ');
-            } else if (header === 'experience' && Array.isArray(val)) {
-              val = val.map(j => `${j.job_title} @ ${j.company}`).join('; ');
-            } else if (header === 'education' && Array.isArray(val)) {
-              val = val.map(e => `${e.degree} @ ${e.institution}`).join('; ');
-            } else if (Array.isArray(val)) {
-              val = val.join('; ');
-            }
-
-            const escaped = ('' + val).replace(/"/g, '""');
-            return `"${escaped}"`;
-          });
-          csvRows.push(values.join(','));
-        });
-
-        const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join('\n'));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", csvContent);
-        downloadAnchor.setAttribute("download", "master_candidates.csv");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        showToast('success', 'Exported master_candidates.csv');
-      }
+      switchOutputView(outputView);
     }
 
+    function exportData(type) {
+      if (!projectedData.length) { showToast('error', 'No data to export.'); return; }
+      let content = '', mime = 'application/json', ext = 'json';
+      if (type === 'json') content = JSON.stringify(projectedData, null, 2);
+      else {
+        ext = 'csv'; mime = 'text/csv';
+        const headers = Object.keys(projectedData[0]);
+        const rows = projectedData.map(row => headers.map(h => {
+          let val = row[h];
+          if (val && typeof val === 'object' && 'value' in val) val = val.value;
+          return `"${JSON.stringify(val || '').replace(/"/g, '""')}"`;
+        }).join(','));
+        content = [headers.join(','), ...rows].join('\n');
+      }
+      const blob = new Blob([content], { type: mime });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `consolidated_candidates.${ext}`;
+      a.click();
+      showToast('success', `Exported ${ext.toUpperCase()} file.`);
+    }
 
+    function updateStatus(text, type = 'active') {
+      const status = document.getElementById('pipeline-status');
+      status.textContent = text;
+      status.className = `status-pill ${type}`;
+    }
+
+    function showToast(type, msg) {
+      const toast = document.getElementById('toast');
+      toast.className = `toast ${type}`;
+      document.getElementById('toast-message').textContent = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
 
     function loadDemoData() {
       switchInputMode('paste');
-      
-      document.getElementById('csv-text-area').value = 
-`name,email,phone,location,years_experience,skills
-Mr. Amit Sharma,amit.sharma@example.com,+919876543210,"Bangalore, India",5,["Python", "Kubernetes"]
-Dr. Jane Doe,jane.doe@example.com,+1-555-0199,"San Francisco, CA",8,["Agile", "Roadmap"]`;
-
-      document.getElementById('json-text-area').value = 
-`[
-  {
-    "full_name": "Amit Sharma",
-    "emails": ["amit.sharma@example.com", "amit.sharma@gmail.com"],
-    "phones": ["9876543210"],
-    "links": [{"platform": "GitHub", "url": "https://github.com/amitsharma"}],
-    "headline": "Senior Software Architect",
-    "skills": ["Go", "Kubernetes"],
-    "experience": [{"job_title": "Tech Lead", "company": "Cloud Corp", "start_date": "2022", "end_date": "Present"}],
-    "education": [{"degree": "B.Tech", "major": "Computer Science", "institution": "IIT Bombay", "graduation_year": "2019"}]
-  }
+      document.getElementById('csv-text-area').value = `name,email,phone,location,skills,yearsexperience
+Bob Johnson,bob.johnson@example.com,+15559876543,Dallas,Python,4
+Jane Doe,jane.doe@example.com,555-0199,"San Francisco, CA",Product Strategy,5`;
+      document.getElementById('json-text-area').value = `[
+  {"name": "Amit Sharma", "email": "amit.sharma@example.com", "phone": "+919876543210", "location": "Bangalore, India", "skills": ["Go", "System Design"]}
 ]`;
-
-      document.getElementById('notes-text-area').value = 
-`Candidate Name: Amit Sharma
-Email contact: amit.sharma@gmail.com
-Phone: +91-98765-43210
-Location: Bengaluru, Karnataka, India
-headline: Staff Engineer
-Skills include System Design, Kubernetes, Python, and C++
-Job: Senior Developer at Microsoft (2019 - 2022)
-Education: MS in Computer Science from Stanford (graduated 2021)
-
-Candidate Name: Jane Doe
+      document.getElementById('notes-text-area').value = `Candidate Name: Jane Doe
 Email contact: jane.doe@example.com
+Notes: Relocating to San Francisco, CA. Currently looking for PM roles.
+Skills include Product Strategy, Agile, and Roadmap.
 Phone number mentioned is 555-0199.
-Location: San Francisco, California, USA
-Headline: Lead Product Manager
-Skills: Product Strategy, Roadmap, User Research
-Job: Product Lead at Google (2020 - Present)
-Education: MBA in Management from Harvard University (Class of 2017)
-`;
 
-      showToast('success', 'Loaded multi-source overlapping candidate profile streams!');
-      executeTransformation();
+Candidate Name: Amit Sharma
+Email contact: amit.sharma@example.com
+Notes: Met him at the Bangalore meetup.
+Skills include Python, Go, Kubernetes, and System Design.`;
+      showToast('success', 'Demo data loaded successfully! Click "Run Consolidation Engine".');
     }
-
-    function loadConfigFile() {
-      const fileInput = document.getElementById('config-file-input');
-      const file = fileInput.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const configJson = JSON.parse(e.target.result);
-          const projection = configJson.projection || configJson;
-
-          const configFields = ['candidate_id', 'full_name', 'emails', 'phones', 'location', 'links', 'headline', 'years_experience', 'skills', 'experience', 'education'];
-          configFields.forEach(f => {
-            const chk = document.getElementById(`field-${f}`);
-            if (chk) chk.checked = false;
-            const renameInput = document.getElementById(`rename-${f}`);
-            if (renameInput) renameInput.value = f;
-          });
-
-          if (Array.isArray(projection.fields)) {
-            projection.fields.forEach(f => {
-              const chk = document.getElementById(`field-${f}`);
-              if (chk) chk.checked = true;
-            });
-          }
-
-          if (projection.rename && typeof projection.rename === 'object') {
-            Object.keys(projection.rename).forEach(f => {
-              const renameInput = document.getElementById(`rename-${f}`);
-              if (renameInput) {
-                renameInput.value = projection.rename[f];
-              }
-            });
-          }
-
-          if (projection.normalizations && typeof projection.normalizations === 'object') {
-            if (projection.normalizations.phones) {
-              document.getElementById('norm-phones').value = projection.normalizations.phones;
-            }
-            if (projection.normalizations.skills) {
-              document.getElementById('norm-skills').value = projection.normalizations.skills;
-            }
-          }
-
-          if (projection.phone_normalization) {
-            document.getElementById('phone-normalization').value = projection.phone_normalization;
-            document.getElementById('norm-phones').value = projection.phone_normalization;
-          }
-          if (projection.skills_normalization) {
-            document.getElementById('skills-normalization').value = projection.skills_normalization;
-            document.getElementById('norm-skills').value = projection.skills_normalization;
-          }
-          if (projection.on_missing) {
-            document.getElementById('on-missing').value = projection.on_missing;
-          }
-          if (projection.include_provenance !== undefined) {
-            document.getElementById('include-provenance').checked = !!projection.include_provenance;
-          }
-
-          showToast('success', 'Runtime configuration JSON imported successfully!');
-          fileInput.value = '';
-          executeTransformation();
-        } catch (err) {
-          showToast('error', 'Failed to parse configuration JSON: ' + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function updateStatus(text, state) {
-      document.getElementById('status-text').textContent = text;
-      const dot = document.getElementById('status-dot');
-      dot.className = 'status-dot';
-      if (state === 'active') dot.classList.add('active');
-      else if (state === 'error') dot.classList.add('error');
-    }
-
-    function showToast(type, message) {
-      const toast = document.getElementById('toast');
-      const toastIcon = document.getElementById('toast-icon');
-      const toastMsg = document.getElementById('toast-message');
-
-      toast.className = 'toast';
-      toast.classList.add(type);
-      
-      let icon = 'ℹ️';
-      if (type === 'success') icon = '✅';
-      else if (type === 'error') icon = '❌';
-      else if (type === 'info') icon = '⚡';
-
-      toastIcon.textContent = icon;
-      toastMsg.textContent = message;
-
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 4000);
-    }
-
-    // Load saved preferences on mount
-    window.addEventListener('DOMContentLoaded', () => {
-      // Clean, bright default loaded.
-    });
   </script>
 </body>
 </html>

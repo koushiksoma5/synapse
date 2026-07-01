@@ -1,0 +1,43 @@
+[
+  {
+    "candidate_id": "cand-f0464467-79b3-a14b-22ec-5a7b8cb89fbf",
+    "full_name": "Amit Sharma",
+    "emails": [
+      "amit.sharma@example.com"
+    ],
+    "phones": [
+      "+919876543210"
+    ],
+    "location": {
+      "city": "Bangalore",
+      "state": null,
+      "country": "India"
+    },
+    "skills": [
+      "python",
+      "go",
+      "kubernetes",
+      "system design"
+    ]
+  },
+  {
+    "candidate_id": "cand-0cba00ca-3da1-b283-a572-87bcceb17e35",
+    "full_name": "Jane Doe",
+    "emails": [
+      "jane.doe@example.com"
+    ],
+    "phones": [
+      "+15550199"
+    ],
+    "location": {
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA"
+    },
+    "skills": [
+      "product strategy",
+      "agile",
+      "roadmap"
+    ]
+  }
+]
