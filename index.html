@@ -350,8 +350,8 @@
       const hasStructured = rawCsvFiles.length > 0 || rawJsonFiles.length > 0 || document.getElementById('csv-text-area').value.trim() || document.getElementById('json-text-area').value.trim();
       const hasUnstructured = rawTxtFiles.length > 0 || document.getElementById('notes-text-area').value.trim();
 
-      if (!hasStructured && !hasUnstructured) {
-        showToast('error', 'Please select or enter input data.');
+      if (!hasStructured || !hasUnstructured) {
+        showToast('error', 'At least one structured and one unstructured source must be provided.');
         return;
       }
 
@@ -379,6 +379,15 @@
         const res = await fetch('/api/transform', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Server error');
+
+        if (result === null) {
+          masterData = [];
+          projectedData = [];
+          handleSearch();
+          updateStatus('Null Input Warning', 'error');
+          showToast('error', 'At least one structured and one unstructured source must be provided.');
+          return;
+        }
 
         masterData = result.master_data;
         projectedData = result.projected_data;
@@ -420,7 +429,7 @@
               <span class="badge badge-${src.toLowerCase().includes('csv') ? 'csv' : (src.toLowerCase().includes('json') ? 'badge-json' : 'notes')}">${src}</span>
               <span>(${Math.round(conf * 100)}%)</span>
             </div>` : '';
-          return `<td><div class="cell-value" title="${displayVal.replace(/<[^>]*>/g, '')}">${displayVal}</div>${provenanceHtml}</td>`;
+          return `<td><div class="cell-value" title="${String(displayVal).replace(/<[^>]*>/g, '')}">${displayVal}</div>${provenanceHtml}</td>`;
         }).join('');
         
         const confHtml = includeProvenance ? `<td><span style="font-weight: 700; color: ${cand.overall_confidence >= 0.8 ? 'var(--accent-green)' : (cand.overall_confidence >= 0.5 ? 'var(--accent-orange)' : 'var(--accent-red)')}">${Math.round(cand.overall_confidence * 100)}%</span></td>` : '';
@@ -452,7 +461,7 @@
               <span class="badge badge-${src.toLowerCase().includes('csv') ? 'csv' : (src.toLowerCase().includes('json') ? 'badge-json' : 'notes')}">${src}</span>
               <span>(${Math.round(conf * 100)}%)</span>
             </div>` : '';
-          return `<td><div class="cell-value" title="${displayVal.replace(/<[^>]*>/g, '')}">${displayVal}</div>${provenanceHtml}</td>`;
+          return `<td><div class="cell-value" title="${String(displayVal).replace(/<[^>]*>/g, '')}">${displayVal}</div>${provenanceHtml}</td>`;
         }).join('');
         
         const overallKey = document.getElementById('rename-overall_confidence')?.value.trim() || 'overall_confidence';

@@ -332,7 +332,12 @@ def normalize_skills(skills: List[str], casing: str) -> List[str]:
     if casing == "titlecase": return [s.title() for s in skills]
     return skills
 
-def run_pipeline(csv_files, txt_files, json_files, csv_text, notes_text, json_text, config) -> Dict[str, List[Dict[str, Any]]]:
+def run_pipeline(csv_files, txt_files, json_files, csv_text, notes_text, json_text, config) -> Optional[Dict[str, List[Dict[str, Any]]]]:
+    has_structured = len(csv_files) > 0 or len(json_files) > 0 or bool(csv_text and csv_text.strip()) or bool(json_text and json_text.strip())
+    has_unstructured = len(txt_files) > 0 or bool(notes_text and notes_text.strip())
+    if not (has_structured and has_unstructured):
+        return None
+
     raw_records = []
     for file in csv_files: raw_records.extend(SourceReader.read_csv_content(file.get("content", ""), file.get("name", "CSV File")))
     if csv_text.strip(): raw_records.extend(SourceReader.read_csv_content(csv_text, "Pasted CSV"))
@@ -449,7 +454,10 @@ class TransformerHTTPHandler(http.server.BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"master_data": consolidated["master"], "projected_data": consolidated["projected"]}).encode('utf-8'))
+                if consolidated is None:
+                    self.wfile.write(json.dumps(None).encode('utf-8'))
+                else:
+                    self.wfile.write(json.dumps({"master_data": consolidated["master"], "projected_data": consolidated["projected"]}).encode('utf-8'))
             except Exception as e:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
